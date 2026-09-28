@@ -1,0 +1,315 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   Tokens, stage, room layers, hotspots, atmosphere
+   ───────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --ink: #0e0a07;
+  --paper: #f3ead9;
+  --paper-dim: rgba(243, 234, 217, 0.62);
+  --paper-faint: rgba(243, 234, 217, 0.32);
+  --amber: #e0a35b;
+  --font-ui: 'Inter Tight Variable', 'Inter Tight', system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ease: cubic-bezier(0.22, 0.7, 0.1, 1);
+  --ease-io: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--ink);
+  scrollbar-width: none;
+}
+html::-webkit-scrollbar {
+  display: none;
+}
+
+body {
+  margin: 0;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+::selection {
+  background: var(--amber);
+  color: var(--ink);
+}
+
+/* ── stage ─────────────────────────────────────────────────────────────────── */
+
+.stage {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 60% 70% at 64% 50%, rgba(80, 42, 18, 0.35), transparent 70%),
+    var(--ink);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.spacer {
+  width: 1px;
+  pointer-events: none;
+}
+
+.gl {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 0;
+}
+
+/* ── hotspot planes: image-sized boxes the engine maps onto the photo with matrix3d ── */
+
+.planes {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.plane {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* ── hotspots ──────────────────────────────────────────────────────────────── */
+
+.hs {
+  position: absolute;
+  pointer-events: none;
+}
+
+.hs__hit {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.plane.is-active .hs__hit {
+  pointer-events: auto;
+}
+
+/* the "lift": the very same pixels as the room, re-drawn above it, so they can scale / brighten / cast a shadow */
+.hs__lift {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform-origin: 50% 50%;
+  transition:
+    opacity 0.35s var(--ease),
+    transform 0.6s var(--ease),
+    filter 0.6s var(--ease);
+}
+.hs__img {
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+}
+
+.hs--frame .hs__hit:hover ~ .hs__lift,
+.hs--frame .hs__hit:focus-visible ~ .hs__lift {
+  opacity: 1;
+  transform: scale(1.045);
+  filter: brightness(1.1) saturate(1.06) drop-shadow(0 calc(9px * var(--inv, 1)) calc(14px * var(--inv, 1)) rgba(28, 14, 5, 0.5));
+}
+
+.hs--object .hs__hit:hover ~ .hs__lift,
+.hs--object .hs__hit:focus-visible ~ .hs__lift {
+  opacity: 1;
+  filter: brightness(1.13) saturate(1.05) drop-shadow(0 0 calc(12px * var(--inv, 1)) rgba(255, 196, 120, 0.6));
+}
+
+/* hint dots on the PC + camera; only when the camera is at rest and the room is settled */
+.hs__dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  opacity: calc(var(--rest, 0) * var(--hint, 0));
+  transition: opacity 0.5s ease;
+}
+.hs__dot::before,
+.hs__dot::after {
+  content: '';
+  position: absolute;
+  left: calc(-4.5px * var(--inv, 1));
+  top: calc(-4.5px * var(--inv, 1));
+  width: calc(9px * var(--inv, 1));
+  height: calc(9px * var(--inv, 1));
+  border-radius: 50%;
+}
+.hs__dot::before {
+  background: rgba(255, 244, 224, 0.95);
+  box-shadow: 0 0 calc(12px * var(--inv, 1)) rgba(255, 210, 140, 0.85);
+}
+.hs__dot::after {
+  border: calc(1px * var(--inv, 1)) solid rgba(255, 240, 214, 0.75);
+  animation: ring 3.6s ease-out infinite;
+}
+.hs--object:has(.hs__hit:hover) .hs__dot {
+  opacity: 0;
+}
+@keyframes ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  75%,
+  100% {
+    transform: scale(4.4);
+    opacity: 0;
+  }
+}
+
+.hs__label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform-origin: 0 0;
+  transform: scale(var(--inv, 1)) translate(-50%, 26px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 9px 14px 10px;
+  border-radius: 10px;
+  background: rgba(18, 12, 8, 0.6);
+  backdrop-filter: blur(10px) saturate(1.2);
+  border: 1px solid rgba(243, 234, 217, 0.16);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.hs__label b {
+  font: 500 10.5px/1 var(--font-mono);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+.hs__label i {
+  font: italic 400 16px/1.1 var(--font-serif);
+  color: var(--paper);
+}
+.hs--object:has(.hs__hit:hover) .hs__label,
+.hs--object:has(.hs__hit:focus-visible) .hs__label {
+  opacity: 1;
+}
+
+/* autofocus brackets on the camera (inside the close layer, so they ride its transform) */
+.af {
+  position: absolute;
+  pointer-events: none;
+  opacity: var(--hud, 0);
+  animation: hunt 1.7s ease-in-out infinite;
+}
+.af i {
+  position: absolute;
+  width: 24%;
+  height: 24%;
+  border: 0 solid rgba(255, 244, 224, 0.95);
+  filter: drop-shadow(0 0 calc(5px * var(--inv, 1)) rgba(0, 0, 0, 0.55));
+}
+.af i:nth-child(1) {
+  left: 0;
+  top: 0;
+  border-top-width: calc(2px * var(--inv, 1));
+  border-left-width: calc(2px * var(--inv, 1));
+}
+.af i:nth-child(2) {
+  right: 0;
+  top: 0;
+  border-top-width: calc(2px * var(--inv, 1));
+  border-right-width: calc(2px * var(--inv, 1));
+}
+.af i:nth-child(3) {
+  left: 0;
+  bottom: 0;
+  border-bottom-width: calc(2px * var(--inv, 1));
+  border-left-width: calc(2px * var(--inv, 1));
+}
+.af i:nth-child(4) {
+  right: 0;
+  bottom: 0;
+  border-bottom-width: calc(2px * var(--inv, 1));
+  border-right-width: calc(2px * var(--inv, 1));
+}
+.af.is-locked {
+  animation: none;
+}
+.af.is-locked i {
+  border-color: #ffdca0;
+}
+@keyframes hunt {
+  0%,
+  100% {
+    transform: scale(1.14);
+  }
+  38% {
+    transform: scale(0.93);
+  }
+  62% {
+    transform: scale(1.04);
+  }
+}
+
+/* ── atmosphere ────────────────────────────────────────────────────────────── */
+
+.dust {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.shade-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 30vh;
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(to top, rgba(10, 6, 3, 0.5), transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hs__dot::after,
+  .af {
+    animation: none;
+  }
+}
