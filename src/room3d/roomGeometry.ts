@@ -32,8 +32,9 @@ export function measureRoom(scene: THREE.Object3D): RoomGeometry {
     new THREE.Vector3(worldBox(need('Wall_Right')).min.x, ceiling.min.y, worldBox(need('Wall_Front')).min.z),
   )
 
-  // the CRT glass: a gently bulged plane facing its local +Z
-  const mesh = need('CRT_Screen') as THREE.Mesh
+  // the screen the resume is shown on, facing its local +Z: the ultrawide's resume window (`Monitor_Screen`, flat)
+  // or the CRT glass (`CRT_Screen` in room.glb, gently bulged)
+  const mesh = (scene.getObjectByName('Monitor_Screen') ?? need('CRT_Screen')) as THREE.Mesh
   mesh.geometry.computeBoundingBox()
   const b = mesh.geometry.boundingBox!
   const edgeZ = b.min.z // the bulge's rim (corners)
