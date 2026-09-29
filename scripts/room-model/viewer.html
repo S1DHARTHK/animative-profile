@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Room model viewer</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #0e0a07;
+        overflow: hidden;
+      }
+      canvas {
+        display: block;
+      }
+      #hud {
+        position: fixed;
+        left: 12px;
+        bottom: 10px;
+        font: 12px/1.4 ui-monospace, monospace;
+        color: #e8dcc6;
+        opacity: 0.7;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="hud">drag = orbit · right-drag = pan · wheel = zoom · ?view=View_Doorway|View_Shelf|View_Desk|View_Close|View_Overview</div>
+    <!--
+      Dev-only inspection page for public/models/room.glb (not part of the website build).
+      Open with the dev server running:  http://127.0.0.1:5173/scripts/room-model/viewer.html
+      Query: ?model=/models/room-small.glb  ?view=<camera name>  ?pos=x,y,z&look=x,y,z&fov=50  ?hide=Ceiling,Wall_Front  ?exposure=1
+    -->
+    <script type="module">
+      import * as THREE from 'three'
+      import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+      import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+      import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
+
+      const q = new URLSearchParams(location.search)
+      const num = (s) => s.split(',').map(Number)
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true })
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
+      renderer.setSize(innerWidth, innerHeight)
+      renderer.toneMapping = THREE.ACESFilmicToneMapping
+      renderer.toneMappingExposure = Number(q.get('exposure') || 1)
+      renderer.shadowMap.enabled = true
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap
+      document.body.appendChild(renderer.domElement)
+
+      const scene = new THREE.Scene()
+      scene.background = new THREE.Color('#0e0a07')
+      const pmrem = new THREE.PMREMGenerator(renderer)
+      scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
+      scene.environmentIntensity = 0.3
+
+      const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.05, 100)
+      const controls = new OrbitControls(camera, renderer.domElement)
+      controls.enableDamping = true
+
+      const gltf = await new GLTFLoader().loadAsync(q.get('model') || '/models/room.glb')
+      scene.add(gltf.scene)
+      const hide = (q.get('hide') || '').split(',').filter(Boolean)
+      gltf.scene.traverse((o) => {
+        if (hide.includes(o.name)) o.visible = false
+        if (o.isMesh) {
+          o.castShadow = !o.material.transparent && o.material.name !== 'garden'
+          o.receiveShadow = true
+        }
+        if (o.isDirectionalLight) {
+          o.castShadow = true
+          o.shadow.mapSize.set(4096, 4096)
+          Object.assign(o.shadow.camera, { left: -7, right: 7, top: 7, bottom: -7, near: 0.5, far: 25 })
+          o.shadow.bias = -0.0003
+          o.shadow.normalBias = 0.02
+        }
+        if (o.isSpotLight) {
+          o.castShadow = true
+          o.shadow.mapSize.set(1024, 1024)
+          o.shadow.bias = -0.0005
+        }
+      })
+
+      // pick a viewpoint: a camera stored in the model, or an explicit one
+      const view = q.get('view') || 'View_Doorway'
+      const src = gltf.cameras.find((c) => c.name === view)
+      if (q.get('pos')) {
+        camera.position.set(...num(q.get('pos')))
+        controls.target.set(...num(q.get('look') || '0,1,-2'))
+        camera.fov = Number(q.get('fov') || 50)
+      } else if (src) {
+        src.updateMatrixWorld(true)
+        src.matrixWorld.decompose(camera.position, camera.quaternion, new THREE.Vector3())
+        camera.fov = src.fov
+        const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion)
+        controls.target.copy(camera.position).addScaledVector(dir, 3)
+      }
+      camera.updateProjectionMatrix()
+      controls.update()
+
+      addEventListener('resize', () => {
+        camera.aspect = innerWidth / innerHeight
+        camera.updateProjectionMatrix()
+        renderer.setSize(innerWidth, innerHeight)
+      })
+      let frames = 0
+      renderer.setAnimationLoop(() => {
+        controls.update()
+        renderer.render(scene, camera)
+        if (++frames === 4) window.__ready = true
+      })
+      window.__info = () => ({ meshes: renderer.info.render.triangles, calls: renderer.info.render.calls })
+    </script>
+  </body>
+</html>
