@@ -267,7 +267,7 @@ export function CameraRig({ room }: { room: RoomHandle }) {
 }
 
 /**
- * Keeps the resume (a DOM element) glued onto the monitor's glass: the 4 corners of `CRT_Screen` are projected
+ * Keeps the resume (a DOM element) glued onto the monitor's glass: the 4 corners of the screen (`Monitor_Screen` / `CRT_Screen`) are projected
  * every frame and mapped with a CSS matrix3d. Hidden when the glass faces away, is too small, or something in
  * the room is in front of it.
  */
