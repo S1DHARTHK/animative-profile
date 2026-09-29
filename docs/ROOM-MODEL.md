@@ -10,8 +10,11 @@ Two complete 3D models of the room (all four walls, floor, ceiling and every obj
 Both come from the same generator with the same objects and node names; only the layout differs. The rest of this
 page describes `room.glb`; `room-small.glb` is identical in structure except: no `Bench`, one `Window_1`, a single
 frame — `Frame_family` (the family photograph, `public/photos/family.webp`) centred on the back wall — instead of the
-seven, and no `Monstera` — its back-left corner has a `Shoe_Stack` instead: a white ladder shelf with sneakers, a cap
-and a trailing pothos. The site's caption for `Frame_family` is `roomFrames.family` in `src/content/photos.ts`.
+seven, no `Monstera`, no `Rug`, `Wall_Shelves` (four wooden shelves on black
+rails: wire globe, books, a small picture, woven box, vase, binders) and a modern desk setup against the back wall:
+`Desk` is a wood slab on black steel end frames with a hanging drawer, `Chair` the teak & cane chair (as in room.glb), and `Desk_Set` holds `Monitor` — a curved ultrawide with a light bar, whose centred 4:3 `Monitor_Screen` is where
+the site shows the resume (`Lamp_Light` sits under the light bar) — plus `Keyboard`, `Mouse`, `Desk_Mat`, `Gamepad`,
+`Mug`, `Notebook` and `Camera`. The site's caption for `Frame_family` is `roomFrames.family` in `src/content/photos.ts`.
 
 | | |
 | --- | --- |
