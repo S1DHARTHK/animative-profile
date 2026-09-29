@@ -82,14 +82,18 @@ const PROFILES = {
     win: { w: 1.15, h: 1.25, sill: 1.05 },
     door: { z: 1.3, w: 0.9, h: 2.1 },
     layout: ({ X0, X1, Z0, DOOR }) => ({
-      desk: { w: 1.45, d: 0.74, legX: 0.685, legZ: 0.33, x: 0.12, z: Z0 + 0.55 + 0.37, setScaleX: 0.9 },
-      chair: [0.08, -0.35, -6],
-      rug: { w: 2.1, d: 1.6, x: 0.1, z: -0.75 },
+      // the wooden slab table on its black steel frame, against the back wall, with the modern set on it (the
+      // ultrawide sits under the family photo)
+      desk: { table: 'steel', set: 'modern', w: 1.7, d: 0.75, top: 0.76, x: 0.0, z: Z0 + 0.02 + 0.375 },
+      // the teak & cane chair from the photographs, pulled up to the desk (its back stays below the camera's path
+      // out from the screen)
+      chair: [0.0, Z0 + 1.05, -6],
+      // wooden wall shelves on black rails, above the right end of the desk
+      shelves: { x: 1.0, w: 0.72, depth: 0.22, ys: [1.3, 1.62, 1.94, 2.26] },
+      rug: null,
       shelf: { x: X0 + 0.19, z: 0.9 },
       bench: null,
       plants: [],
-      // white ladder shelf of sneakers in the back-left corner (clear of the window sill), as in the reference photo
-      shoeStack: { x: X0 + 0.27, z: Z0 + 0.155 },
       // a single frame — the family photograph — in the centre of the back wall; no poster on the right wall
       back: [['family', 1.0, 0.66, 'family', undefined, 0, 1.86]],
       street: null,
@@ -112,7 +116,7 @@ const PROFILES = {
         ['View_Doorway', [1.1, 1.6, 1.85], [-0.1, 1.05, -1.6], 62],
         ['View_Shelf', [-0.75, 1.55, 1.75], [0.55, 1.0, -1.7], 58],
         ['View_Desk', [0.2, 1.35, 0.85], [0.2, 1.25, -2.0], 55],
-        ['View_Close', [-0.3, 1.15, -0.25], [0.35, 0.98, -1.25], 48],
+        ['View_Close', [-0.35, 1.2, -0.75], [0.25, 1.0, -1.75], 48],
         ['View_Overview', [1.4, 2.5, 1.85], [-0.5, 0.6, -1.2], 65],
       ],
     }),
@@ -192,17 +196,24 @@ const MATERIALS = {
   cable: { color: '#cfc6b1', rough: 0.6 },
   linen: { color: '#d9cdb8', rough: 0.95 },
   cableBlack: { color: '#111111', rough: 0.6 },
-  // shoe stack (small room)
-  lackWhite: { color: '#f1efea', rough: 0.34 },
-  potBlack: { color: '#1f1f1f', rough: 0.62 },
-  soleWhite: { color: '#efece5', rough: 0.62 },
-  soleCream: { color: '#e6dccb', rough: 0.66 },
-  soleGum: { color: '#a8703f', rough: 0.58 },
-  'shoe-maroon': { tex: 'shoe-maroon', rough: 0.9 },
-  'shoe-grey': { tex: 'shoe-grey', rough: 0.9 },
-  'shoe-green': { tex: 'shoe-green', rough: 0.55 },
-  'shoe-panda': { tex: 'shoe-panda', rough: 0.5 },
-  capNavy: { color: '#16307a', rough: 0.88 },
+  // wall shelves (small room)
+  slabWood: { tex: 'slab', rough: 0.52 },
+  blackSteel: { color: '#1b1b1b', rough: 0.42, metal: 0.6 },
+  weaveBlack: { tex: 'weave', rough: 0.6, metal: 0.3 },
+  ceramicDark: { color: '#3d332c', rough: 0.42 },
+  binderBlack: { color: '#1c1c1e', rough: 0.55 },
+  // modern desk setup (small room)
+  monitorBlack: { color: '#141416', rough: 0.35, metal: 0.4 },
+  wallpaper: { color: '#000000', emissive: '#ffffff', emissiveTex: 'wallpaper', emissiveStrength: 1, rough: 0.22 },
+  screenWindow: { color: '#100b08', rough: 0.25 },
+  lightStrip: { color: '#fff4e0', emissive: '#fff1dc', emissiveStrength: 4 },
+  kbCase: { color: '#2a2a2c', rough: 0.4, metal: 0.3 },
+  keyDark: { color: '#38383b', rough: 0.55 },
+  keyTan: { color: '#c7ae88', rough: 0.55 },
+  plasticDark: { color: '#262628', rough: 0.45 },
+  deskMat: { color: '#2c2a28', rough: 0.95 },
+  mugBlack: { color: '#1e1e1f', rough: 0.32 },
+  notebookDark: { color: '#2b241f', rough: 0.7 },
 }
 const BOOK_COLORS = ['#2f3b33', '#d8cdb4', '#7a3b2e', '#34495e', '#b58c4f', '#5a4a42', '#8a8d7a', '#27313d', '#a4553a', '#c9bfa7']
 BOOK_COLORS.forEach((c, i) => (MATERIALS[`book${i}`] = { color: c, rough: 0.7 }))
@@ -301,6 +312,11 @@ function rand(seed) {
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296
   }
+}
+
+const smoothstep = (e0, e1, x) => {
+  const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0)))
+  return t * t * (3 - 2 * t)
 }
 
 /* ── architecture ─────────────────────────────────────────────────────────────────────────── */
@@ -616,10 +632,10 @@ function monstera(seed, scale = 1, count = 9) {
   return bake(g)
 }
 
-function potPlant(potR, potH, leaves, seed, potMat = 'ceramicCream') {
+function potPlant(potR, potH, leaves, seed) {
   const r = rand(seed)
   const g = G('PotPlant')
-  g.add(M(lathe([[0, 0], [potR * 0.8, 0], [potR, potH], [potR * 1.05, potH + 0.003], [potR * 0.96, potH + 0.003], [potR * 0.9, potH - 0.01], [0, potH - 0.01]], 32), potMat))
+  g.add(M(lathe([[0, 0], [potR * 0.8, 0], [potR, potH], [potR * 1.05, potH + 0.003], [potR * 0.96, potH + 0.003], [potR * 0.9, potH - 0.01], [0, potH - 0.01]], 32), 'ceramicCream'))
   g.add(M(cyl(potR * 0.9, potR * 0.9, 0.006, 24).translate(0, potH - 0.012, 0), 'soil'))
   for (let i = 0; i < leaves; i++) {
     const a = (i / leaves) * 360 + r() * 40
@@ -676,183 +692,237 @@ function trailingPlant(seed) {
   return g
 }
 
-/* ── shoe stack (small room): white ladder shelf, sneakers, a cap and a trailing pothos ───────── */
-const smoothstep = (e0, e1, x) => {
-  const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0)))
-  return t * t * (3 - 2 * t)
-}
-/** a smooth curve through [t, y] control points (t ascending), evaluated at t */
-function profile(pts) {
-  const table = new THREE.SplineCurve(pts.map(([t, y]) => new THREE.Vector2(t, y))).getSpacedPoints(200)
-  return (t) => {
-    let i = 1
-    while (i < table.length - 1 && table[i].x < t) i++
-    const a = table[i - 1]
-    const b = table[i]
-    return a.y + ((b.y - a.y) * (t - a.x)) / (b.x - a.x || 1)
+/* ── wall shelves (small room): wooden shelves on black rails ─────────────────────────────── */
+/** a wire globe: meridians and parallels of thin black rod */
+function wireSphere(r) {
+  const g = G('Wire_Sphere')
+  for (let k = 0; k < 6; k++) g.add(M(new THREE.TorusGeometry(r, 0.0016, 4, 56).rotateY((k * Math.PI) / 6).translate(0, r, 0), 'blackSteel'))
+  for (const lat of [-60, -30, 0, 30, 60]) {
+    const a = (lat * Math.PI) / 180
+    g.add(M(new THREE.TorusGeometry(r * Math.cos(a), 0.0016, 4, 48).rotateX(Math.PI / 2).translate(0, r + r * Math.sin(a), 0), 'blackSteel'))
   }
+  return g
 }
-const SHOE = {
-  length: 0.285,
-  // half-width of the sole outline, heel (t = 0) → toe (t = 1), rounded at both ends
-  hw: (t) => {
-    const w = 0.034 + 0.018 * smoothstep(0.08, 0.66, t) - 0.004 * smoothstep(0.75, 1, t)
-    const heel = t < 0.14 ? Math.sqrt(Math.max(0, 1 - ((0.14 - t) / 0.14) ** 2)) : 1
-    const toe = t > 0.8 ? Math.sqrt(Math.max(0, 1 - ((t - 0.8) / 0.2) ** 2)) : 1
-    return w * heel * toe
-  },
-  // the foot's slight inward curve (mirrored for left / right)
-  cz: (t, side) => side * 0.006 * smoothstep(0.4, 0.9, t),
-  // top line of the upper above the ground: heel counter, low collar, tongue, laces sloping down to the toe
-  top: profile([[0, 0.098], [0.06, 0.104], [0.2, 0.086], [0.34, 0.101], [0.42, 0.096], [0.62, 0.073], [0.82, 0.058], [0.95, 0.048], [1, 0.038]]),
-  // how deep the collar opening dips (same curve the textures paint the lining with)
-  collar: (t) => (t > 0.035 && t < 0.36 ? Math.sin((Math.PI * (t - 0.035)) / 0.325) ** 0.6 : 0),
+/** a closed book lying flat: black cover, page block on three sides */
+function blackBook(w, h, d) {
+  const g = G('Book')
+  g.add(M(box(w, h, d).translate(0, h / 2, 0), 'binderBlack'))
+  g.add(M(box(w - 0.012, h - 0.008, d - 0.006).translate(0.007, h / 2, 0.004), 'pages'))
+  return g
 }
-/** the sole: the foot outline extruded, a touch wider than the upper */
-function sneakerSole(side, h) {
-  const n = 48
-  const pts = []
-  for (let i = 0; i <= n; i++) {
-    const t = i / n
-    pts.push(new THREE.Vector2(t * SHOE.length, SHOE.cz(t, side) + SHOE.hw(t) * 1.03 + 0.002))
+
+/**
+ * Wooden wall shelves on two black rails (from the reference photo). Origin: on the wall face, centred; the shelves
+ * reach toward +z. Holds a wire globe, black books and a small picture, a little pot, a woven box, a vase and binders.
+ */
+function wallShelves() {
+  const g = G('Wall_Shelves')
+  const { ys, w, depth } = L.shelves
+  const th = 0.034
+  const railX = w / 2 - 0.13
+  const unit = G('Shelf_Unit')
+  for (const s of [-1, 1]) {
+    const y0 = ys[0] - 0.32
+    const y1 = ys[ys.length - 1] + 0.2
+    unit.add(M(box(0.028, y1 - y0, 0.012).translate(s * railX, (y0 + y1) / 2, 0.006), 'blackSteel'))
+    for (const y of ys) unit.add(M(box(0.012, 0.028, depth - 0.03).translate(s * railX, y - th - 0.014, depth / 2), 'blackSteel'))
   }
-  for (let i = n; i >= 0; i--) {
-    const t = i / n
-    pts.push(new THREE.Vector2(t * SHOE.length, SHOE.cz(t, side) - SHOE.hw(t) * 1.03 - 0.002))
+  for (const y of ys) unit.add(M(box(w, th, depth, 1.2).translate(0, y - th / 2, depth / 2 + 0.012), 'slabWood'))
+  g.add(bake(unit))
+  const on = (k, obj, x, z = depth / 2 + 0.01, ry = 0) => g.add(at(obj, x, ys[ys.length - 1 - k], z, ry))
+  // top → bottom
+  on(0, bake(wireSphere(0.085)), 0.14)
+  const stack = G('Book_Stack')
+  ;[0.032, 0.026, 0.03, 0.024].reduce((y, h, i) => {
+    stack.add(at(blackBook(0.2 - i * 0.008, h, 0.15), (i % 2 ? 0.006 : -0.004), y, 0, (i % 2 ? -3 : 2)))
+    return y + h
+  }, 0)
+  on(1, bake(stack), -0.13)
+  const pic = G('Shelf_Picture')
+  pic.add(M(box(0.15, 0.19, 0.014).translate(0, 0.095, 0), 'mat'))
+  pic.add(M(box(0.085, 0.095, 0.002).translate(0, 0.1, 0.008), 'blackMatte'))
+  pic.rotation.x = -0.1
+  on(1, bake(G('Picture', pic)), 0.19, depth / 2 - 0.03)
+  on(2, M(lathe([[0, 0], [0.036, 0], [0.038, 0.07], [0.034, 0.078], [0.03, 0.074], [0, 0.074]], 28), 'ceramicDark', 'Shelf_Pot'), 0.24)
+  on(3, M(box(0.2, 0.13, 0.15, 0.3).translate(0, 0.065, 0), 'weaveBlack', 'Woven_Box'), -0.17)
+  on(3, M(lathe([[0, 0], [0.03, 0], [0.042, 0.04], [0.036, 0.09], [0.018, 0.11], [0.02, 0.125], [0, 0.125]], 28), 'ceramicDark', 'Shelf_Vase'), 0.03)
+  const binders = G('Binders')
+  for (let i = 0; i < 4; i++) {
+    const x = i * 0.043
+    binders.add(M(box(0.04, 0.27, 0.2).translate(x, 0.135, 0), 'binderBlack'))
+    binders.add(M(box(0.024, 0.055, 0.002).translate(x, 0.19, 0.101), 'pages'))
+    binders.add(M(cyl(0.006, 0.006, 0.003, 12).rotateX(Math.PI / 2).translate(x, 0.07, 0.101), 'pages'))
   }
-  const bevel = 0.004
-  const g = new THREE.ExtrudeGeometry(new THREE.Shape(pts), { depth: h - 2 * bevel, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 2, curveSegments: 4 })
-  return g.rotateX(Math.PI / 2).translate(0, h - bevel, 0)
+  on(3, bake(binders), 0.15, depth / 2 - 0.005)
+  return g
 }
-/** the upper: superellipse arches lofted heel → toe, the collar dipped into an opening; UVs as the shoe textures expect */
-function sneakerUpper(side, soleH) {
-  const NS = 44
-  const NA = 26
-  const y0 = soleH - 0.004
-  const insole = soleH + 0.012
-  const e = 2 / 3.4
-  const pos = []
-  const uv = []
-  const idx = []
-  for (let i = 0; i <= NS; i++) {
-    const t = 0.5 - 0.5 * Math.cos((Math.PI * i) / NS) // denser at heel and toe
-    const w = SHOE.hw(t) * 0.95
-    const zc = SHOE.cz(t, side)
-    const top = SHOE.top(t)
-    for (let j = 0; j <= NA; j++) {
-      const f = (Math.PI * j) / NA
-      const c = Math.cos(f)
-      let z = zc + w * Math.sign(c) * Math.abs(c) ** e
-      let y = y0 + (top - y0) * Math.abs(Math.sin(f)) ** e
-      const v = 1 - Math.abs((2 * j) / NA - 1)
-      const d = SHOE.collar(t) * smoothstep(0.66, 0.8, v)
-      y += (insole - y) * d
-      z = zc + (z - zc) * (1 - 0.18 * d)
-      pos.push(t * SHOE.length, y, z)
-      uv.push(t, v)
-    }
+
+/* ── modern desk setup (small room): slab table on steel, ultrawide, keyboard, gamepad… ─────────── */
+/** solid wood slab on black square-tube end frames, a back rail + diagonal brace, a drawer hung on the right */
+function industrialDesk() {
+  const g = G('Desk')
+  const { w, d, top } = L.desk
+  const th = 0.05 // slab thickness
+  const t = 0.04 // square tube
+  const lx = w / 2 - 0.07
+  const lz = d / 2 - 0.05
+  const yb = top - th // underside of the slab
+  g.add(M(box(w, th, d, 1.2).translate(0, top - th / 2, 0), 'slabWood'))
+  for (const sx of [-1, 1]) {
+    for (const sz of [-1, 1]) g.add(M(box(t, yb, t).translate(sx * lx, yb / 2, sz * lz), 'blackSteel'))
+    g.add(M(box(t, t, 2 * lz + t).translate(sx * lx, yb - t / 2, 0), 'blackSteel'))
+    g.add(M(box(t, t, 2 * lz + t).translate(sx * lx, t / 2, 0), 'blackSteel'))
   }
-  for (let i = 0; i < NS; i++)
-    for (let j = 0; j < NA; j++) {
-      const a = i * (NA + 1) + j
-      const b = a + NA + 1
-      idx.push(a, b, a + 1, b, b + 1, a + 1)
-    }
-  const g = new THREE.BufferGeometry()
-  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
-  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2))
-  g.setIndex(idx)
+  g.add(M(box(2 * lx, t, t).translate(0, yb - t / 2, -lz), 'blackSteel'))
+  // the drawer hangs under the right side; a flat bar runs from it down to the right-hand foot
+  const dw = 0.36
+  const dh = 0.12
+  const dd = 0.5
+  const dx = 0.42
+  const dz = d / 2 - 0.06 - dd / 2
+  const dy = yb - 0.012 - dh / 2
+  g.add(M(box(dw, dh, dd, 0.6).translate(dx, dy, dz), 'slabWood'))
+  g.add(M(box(dw - 0.02, dh - 0.02, 0.012, 0.6).translate(dx, dy, dz + dd / 2 + 0.004), 'slabWood'))
+  g.add(M(new THREE.SphereGeometry(0.009, 12, 8).scale(1, 1, 0.7).translate(dx, dy + 0.01, dz + dd / 2 + 0.014), 'blackSteel'))
+  for (const s of [-1, 1]) g.add(M(box(0.004, 0.03, dd * 0.8).translate(dx + s * (dw / 2 + 0.002), yb - 0.015, dz), 'blackSteel'))
+  g.add(M(beam([dx - dw / 2, dy - dh / 2, -lz], [lx, t, -lz], 0.03, 0.01), 'blackSteel'))
+  return bake(g)
+}
+
+/** bend a geometry around a vertical axis R in front of it (a curved monitor: the edges come toward the viewer) */
+function curve(g, R) {
+  const p = g.attributes.position
+  for (let i = 0; i < p.count; i++) {
+    const a = p.getX(i) / R
+    const z = p.getZ(i) // depth behind the glass (negative) measured from the curve's centre, R in front
+    p.setX(i, (R - z) * Math.sin(a))
+    p.setZ(i, R - (R - z) * Math.cos(a))
+  }
   g.computeVertexNormals()
   return g
 }
-/** a pair of sneakers lying lengthwise on a shelf, toes to the left; origin = centre of the shelf top */
-function sneakerPair(upper, sole, soleH, seed) {
-  const r = rand(seed)
-  const g = G('Sneakers')
-  ;[
-    [1, 0.068],
-    [-1, -0.052],
-  ].forEach(([side, z], k) => {
-    const s = G('Sneaker')
-    s.add(M(sneakerSole(side, soleH), sole))
-    s.add(M(sneakerUpper(side, soleH), upper))
-    // toe at -x: turn the shoe around and centre it; the back shoe sits a little further in and askew
-    g.add(at(s, SHOE.length / 2 + (k ? 0.01 : 0) + (r() - 0.5) * 0.01, 0, z, 180 + (r() - 0.5) * (k ? 7 : 3)))
-  })
-  return g
-}
-/** a navy baseball cap, brim toward the front */
-function cap() {
-  const g = G('Cap')
-  const R = 0.085
-  g.add(M(new THREE.SphereGeometry(R, 28, 12, 0, Math.PI * 2, 0, Math.PI / 2).scale(1, 0.8, 1.12), 'capNavy'))
-  g.add(M(new THREE.SphereGeometry(0.007, 10, 6).scale(1, 0.5, 1).translate(0, R * 0.8, 0), 'capNavy'))
-  g.add(M(box(0.022, 0.016, 0.004).rotateX(-0.55).translate(0, 0.036, R * 1.0), 'pin')) // the little red logo
-  // brim: a crescent from the crown's front edge, curved down at the sides
-  const n = 24
-  const inner = []
-  const outer = []
-  for (let i = 0; i <= n; i++) {
-    const x = -R + (2 * R * i) / n
-    const zi = Math.sqrt(Math.max(0, R * R - x * x)) * 1.12 * 0.9
-    inner.push(new THREE.Vector2(x, zi))
-    outer.push(new THREE.Vector2(x, zi + 0.075 * Math.sqrt(Math.max(0, 1 - (x / R) ** 2))))
-  }
-  const brim = new THREE.ExtrudeGeometry(new THREE.Shape([...outer, ...inner.reverse()]), { depth: 0.004, bevelEnabled: false })
-  brim.rotateX(Math.PI / 2).translate(0, 0.004, 0)
-  const p = brim.attributes.position
-  // the crown rim rests on the shelf: the brim arches up in the middle and droops a little at the front
-  for (let i = 0; i < p.count; i++) p.setY(i, p.getY(i) + 2.6 * (R * R - p.getX(i) ** 2) - 0.1 * Math.max(0, p.getZ(i) - 0.09))
-  brim.computeVertexNormals()
-  g.add(M(brim, 'capNavy'))
-  return g
-}
-/** pothos in a black nursery pot, trailing down the left side and over the front */
-function hangingPothos(seed) {
-  const r = rand(seed)
-  const g = potPlant(0.068, 0.1, 20, seed, 'potBlack')
-  g.name = 'Pothos'
-  const vines = [
-    [[-0.04, 0.09, 0.03], [-0.13, 0.05, 0.08], [-0.17, -0.15, 0.1], [-0.18, -0.4, 0.12], [-0.17, -0.62, 0.11]],
-    [[-0.02, 0.09, 0.05], [-0.05, 0.03, 0.15], [-0.08, -0.18, 0.17], [-0.1, -0.36, 0.18]],
-    [[0.04, 0.09, 0.04], [0.09, 0.03, 0.13], [0.11, -0.12, 0.16]],
-  ]
-  for (const pts of vines) {
-    g.add(M(tube(pts, 0.0022, 36, 4), 'stem'))
-    const curve = new THREE.CatmullRomCurve3(pts.map((q) => V(...q)))
-    const leaves = Math.round(curve.getLength() / 0.032)
-    for (let k = 1; k <= leaves; k++) {
-      const lf = leaf('pothos', 0.055 + r() * 0.03, r() * 360, -20 + r() * 50, (r() - 0.5) * 60, 0.06, 0.04)
-      lf.position.copy(curve.getPoint(k / (leaves + 0.5)))
-      g.add(lf)
-    }
-  }
-  return g
-}
 /**
- * The shoe stack from the reference photo: a narrow white ladder shelf (30 × 25 cm, six shelves) standing against
- * the wall — sneakers lengthwise on the shelves, a cap in the middle, a pothos on top. Origin: floor, back of the rails.
+ * 34" curved ultrawide on a black stand with a light bar. The panel shows a wallpaper; the resume window in its
+ * centre is `Monitor_Screen` (a flat 4:3 quad the site maps the resume onto). Origin: desk surface, panel front z = 0.
  */
-function shoeStack() {
-  const g = G('Shoe_Stack')
-  const Wd = 0.3
-  const depth = 0.25
-  const rail = { w: 0.026, d: 0.034 }
-  const zs = rail.d + depth / 2 // shelf centre
-  const tops = [0.13, 0.45, 0.77, 1.09, 1.41, 1.73]
-  const th = 0.045
-  const unit = G('Shoe_Shelf')
-  const railH = tops[5] + 0.02
-  for (const sx of [-1, 1]) unit.add(M(rbox(rail.w, railH, rail.d, 0.004).translate(sx * (Wd / 2 - rail.w / 2), railH / 2, rail.d / 2), 'lackWhite'))
-  for (const y of tops) unit.add(M(rbox(Wd, th, depth, 0.006).translate(0, y - th / 2, zs), 'lackWhite'))
-  g.add(bake(unit))
-  const shelf = (k, obj) => g.add(at(obj, 0, tops[k], zs))
-  shelf(0, bake(sneakerPair('shoe-panda', 'soleWhite', 0.03, 811)))
-  shelf(1, bake(sneakerPair('shoe-green', 'soleGum', 0.026, 812)))
-  shelf(2, bake(G('Cap', at(cap(), 0.01, 0, 0, -38))))
-  shelf(3, bake(sneakerPair('shoe-grey', 'soleCream', 0.028, 813)))
-  shelf(4, bake(sneakerPair('shoe-maroon', 'soleWhite', 0.028, 814)))
-  shelf(5, bake(G('Pothos', at(hangingPothos(815), 0.01, 0, 0))))
+function ultrawide() {
+  const g = G('Monitor')
+  const W = 0.8
+  const Hp = 0.335
+  const R = 1.8
+  const bez = 0.008
+  const yc = 0.3
+  const body = G('Monitor_Body')
+  body.add(M(curve(new THREE.BoxGeometry(W + 2 * bez, Hp + 2 * bez, 0.012, 64, 1, 1).translate(0, 0, -0.006), R).translate(0, yc, 0), 'monitorBlack'))
+  body.add(M(curve(rbox(0.36, 0.22, 0.03, 0.01).translate(0, 0, -0.027), R).translate(0, yc - 0.01, 0), 'monitorBlack'))
+  // stand: slim foot, column, bracket into the back of the panel
+  body.add(M(rbox(0.27, 0.012, 0.19, 0.005).translate(0, 0.006, -0.1), 'monitorBlack'))
+  body.add(M(rbox(0.05, 0.33, 0.022, 0.006).translate(0, 0.012 + 0.165, -0.115), 'monitorBlack'))
+  body.add(M(rbox(0.08, 0.07, 0.07, 0.008).translate(0, yc - 0.02, -0.075), 'monitorBlack'))
+  // light bar clipped on the top edge
+  const top = yc + Hp / 2 + bez
+  body.add(M(cyl(0.011, 0.011, 0.44, 20).rotateZ(Math.PI / 2).translate(0, top + 0.016, 0.004), 'monitorBlack'))
+  body.add(M(box(0.05, 0.03, 0.03).translate(0, top + 0.006, -0.01), 'monitorBlack'))
+  body.add(M(box(0.4, 0.003, 0.01).translate(0, top + 0.0055, 0.01), 'lightStrip'))
+  g.add(bake(body))
+  const screen = curve(new THREE.PlaneGeometry(W, Hp, 64, 1).translate(0, 0, 0.0008), R).translate(0, yc, 0)
+  g.add(M(screen, 'wallpaper', 'Monitor_Wallpaper'))
+  // the resume window: flat, its corners on the curved glass (the site overlays the resume page here)
+  const sh = Hp * 0.8
+  const sw = (sh * 4) / 3
+  const zEdge = R * (1 - Math.cos(sw / 2 / R)) + 0.0015
+  g.add(M(new THREE.PlaneGeometry(sw, sh).translate(0, yc, zEdge), 'screenWindow', 'Monitor_Screen'))
+  // where the lamp light sits (under the light bar) and where it points (onto the keyboard)
+  const bulb = new THREE.Object3D()
+  bulb.name = 'Monitor_Light'
+  bulb.position.set(0, top, 0.02)
+  g.add(bulb)
+  g.userData.bulb = bulb
+  g.userData.bulbAt = [0, 0, 0]
+  g.userData.aim = [0, -top, 0.32]
+  return g
+}
+
+/** 75% mechanical keyboard: dark case, dark alphas, tan modifiers */
+function modernKeyboard() {
+  const g = G('Keyboard')
+  const parts = G('KbParts')
+  const u = 0.019
+  parts.add(M(rbox(16 * u + 0.014, 0.022, 6 * u + 0.014, 0.006).translate(0, 0.011, 0), 'kbCase'))
+  const rows = [
+    [[1, 't'], ...Array(12).fill([1, 'd']), [1, 't'], [1, 'd'], [1, 'd']],
+    [...Array(13).fill([1, 'd']), [2, 't'], [1, 'd']],
+    [[1.5, 't'], ...Array(12).fill([1, 'd']), [1.5, 'd'], [1, 'd']],
+    [[1.75, 't'], ...Array(11).fill([1, 'd']), [2.25, 't'], [1, 'd']],
+    [[2.25, 't'], ...Array(10).fill([1, 'd']), [1.75, 't'], [1, 'd'], [1, 'd']],
+    [[1.25, 't'], [1.25, 't'], [1.25, 't'], [6.25, 'd'], [1, 't'], [1, 't'], [1, 't'], [1, 'd'], [1, 'd'], [1, 'd']],
+  ]
+  rows.forEach((row, r) => {
+    let x = -8 * u
+    const z = (r - 2.5) * u
+    for (const [wu, c] of row) {
+      parts.add(M(rbox(wu * u - 0.0025, 0.009, u - 0.0025, 0.0022, 2).translate(x + (wu * u) / 2, 0.026 - r * 0.0006, z), c === 't' ? 'keyTan' : 'keyDark'))
+      x += wu * u
+    }
+  })
+  g.add(bake(parts))
+  g.rotation.x = 0.035
+  return g
+}
+function modernMouse() {
+  const g = G('Mouse')
+  g.add(M(new THREE.SphereGeometry(1, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2).scale(0.032, 0.021, 0.058), 'plasticDark'))
+  g.add(M(cyl(0.004, 0.004, 0.006, 12).rotateZ(Math.PI / 2).translate(0, 0.02, -0.022), 'keyDark'))
+  return bake(g)
+}
+function deskMat() {
+  return M(rbox(0.86, 0.004, 0.36, 0.002, 1).translate(0, 0.002, 0), 'deskMat', 'Desk_Mat')
+}
+/** a gamepad lying on the desk (grips toward the viewer) */
+function gamepad() {
+  const g = G('Gamepad')
+  for (const s of [-1, 1]) g.add(M(new THREE.SphereGeometry(0.034, 20, 14).scale(1, 0.55, 1.35).translate(s * 0.046, 0.019, 0.014), 'plasticDark'))
+  g.add(M(rbox(0.1, 0.03, 0.062, 0.013).translate(0, 0.02, -0.004), 'plasticDark'))
+  g.add(M(cyl(0.0095, 0.008, 0.012, 16).translate(-0.034, 0.037, -0.008), 'keyDark'))
+  g.add(M(cyl(0.0095, 0.008, 0.012, 16).translate(0.02, 0.037, 0.012), 'keyDark'))
+  for (const [x, z] of [[0.042, -0.019], [0.052, -0.009], [0.032, -0.009], [0.042, 0.001]]) g.add(M(new THREE.SphereGeometry(0.0052, 10, 6).translate(x, 0.036, z), 'keyDark'))
+  g.add(M(box(0.018, 0.004, 0.006).translate(-0.02, 0.035, 0.013), 'keyDark'))
+  g.add(M(box(0.006, 0.004, 0.018).translate(-0.02, 0.035, 0.013), 'keyDark'))
+  g.add(M(new THREE.SphereGeometry(0.006, 10, 6).translate(0, 0.036, -0.02), 'keyTan'))
+  return bake(g)
+}
+function mugWithPen() {
+  const g = G('Mug')
+  g.add(M(lathe([[0, 0], [0.038, 0], [0.041, 0.085], [0.037, 0.085], [0.034, 0.008], [0, 0.008]], 32), 'mugBlack'))
+  g.add(M(new THREE.TorusGeometry(0.022, 0.006, 8, 20, Math.PI).rotateZ(-Math.PI / 2).translate(0.041, 0.045, 0), 'mugBlack'))
+  g.add(M(rod([-0.01, 0.01, 0.004], [-0.045, 0.14, -0.012], 0.004, 8), 'pen'))
+  return bake(g)
+}
+function closedNotebook() {
+  const g = G('Notebook')
+  g.add(M(rbox(0.155, 0.016, 0.215, 0.003).translate(0, 0.008, 0), 'notebookDark'))
+  g.add(M(box(0.146, 0.012, 0.004).translate(0.003, 0.008, 0.106), 'pages'))
+  g.add(M(rod([-0.05, 0.02, -0.07], [0.02, 0.02, 0.07], 0.0045, 10), 'pen'))
+  return bake(g)
+}
+
+/** the modern desk set: ultrawide + light bar, keyboard on a mat, mouse, gamepad, mug, notebook, and the camera
+ *  (the photography entry point) */
+function modernDeskSet() {
+  const g = G('Desk_Set')
+  const top = L.desk.top
+  const put = (obj, x, z, ry = 0, dy = 0) => g.add(at(obj, x, top + dy, z, ry))
+  put(ultrawide(), 0, -0.17)
+  put(deskMat(), 0.04, 0.11)
+  put(modernKeyboard(), -0.05, 0.13, 0, 0.006) // on the mat
+  put(modernMouse(), 0.33, 0.15, -8, 0.004)
+  put(gamepad(), 0.24, -0.01, -18, 0.004)
+  put(camera(), 0.62, 0.16, -30)
+  put(mugWithPen(), -0.7, -0.1)
+  put(closedNotebook(), -0.6, 0.15, 8)
+  // cables: monitor → back of desk, keyboard → monitor
+  g.add(M(tube([[0, top + 0.05, -0.29], [0.08, top + 0.004, -0.32], [0.3, top + 0.004, -0.36]], 0.003, 24, 5), 'cableBlack'))
+  g.add(M(tube([[-0.05, top + 0.012, 0.07], [-0.02, top + 0.006, 0.0], [0.0, top + 0.006, -0.14]], 0.0022, 24, 5), 'cableBlack'))
   return g
 }
 
@@ -1168,7 +1238,7 @@ function ceilingFan() {
 }
 
 /* ── lights & viewpoints ──────────────────────────────────────────────────────────────────── */
-function lights(bulbWorld) {
+function lights(bulbWorld, aim) {
   const g = G('Lights')
   const sun = new THREE.DirectionalLight(L.sun.color ?? 0xffd29c, L.sun.intensity)
   sun.name = 'Sun'
@@ -1178,7 +1248,7 @@ function lights(bulbWorld) {
   const spot = new THREE.SpotLight(0xffc98a, 6, 4, 0.8, 0.55, 2)
   spot.name = 'Lamp_Light'
   spot.position.copy(bulbWorld)
-  spot.lookAt(bulbWorld.x + 0.15, 0.75, bulbWorld.z + 0.1)
+  spot.lookAt(aim)
   g.add(spot)
   const fill = new THREE.PointLight(0xffe8cc, L.fill.intensity, 16, 2)
   fill.name = 'Room_Fill'
@@ -1214,14 +1284,14 @@ async function main() {
   root.add(door())
 
   const furniture = G('Furniture')
-  furniture.add(at(desk(), L.desk.x, 0, L.desk.z))
-  const set = deskSet()
+  furniture.add(at(L.desk.table === 'steel' ? industrialDesk() : desk(), L.desk.x, 0, L.desk.z))
+  const set = L.desk.set === 'modern' ? modernDeskSet() : deskSet()
   furniture.add(at(set, L.desk.x, 0, L.desk.z))
   furniture.add(at(chair(), L.chair[0], 0, L.chair[1], L.chair[2]))
-  furniture.add(at(rug(), L.rug.x, 0, L.rug.z))
+  if (L.rug) furniture.add(at(rug(), L.rug.x, 0, L.rug.z))
   furniture.add(at(shelf(), L.shelf.x, 0, L.shelf.z, 90))
   if (L.bench) furniture.add(at(bench(), L.bench.x, 0, L.bench.z, 90))
-  if (L.shoeStack) furniture.add(at(shoeStack(), L.shoeStack.x, 0, L.shoeStack.z))
+  if (L.shelves) furniture.add(at(wallShelves(), L.shelves.x, 0, Z0 + 0.001))
   root.add(furniture)
 
   if (L.plants.length) root.add(G('Plants', ...L.plants.map(([seed, scale, count, x, z]) => at(monstera(seed, scale, count), x, 0, z))))
@@ -1230,8 +1300,10 @@ async function main() {
 
   root.updateMatrixWorld(true)
   const bulb = new THREE.Vector3()
-  set.children.find((c) => c.name === 'Desk_Lamp').userData.bulb.localToWorld(bulb.set(0, 0.055, 0))
-  root.add(lights(bulb))
+  const lampObj = set.children.find((c) => c.userData.bulb)
+  lampObj.userData.bulb.localToWorld(bulb.set(...(lampObj.userData.bulbAt ?? [0, 0.055, 0])))
+  const aim = lampObj.userData.aim ? lampObj.userData.bulb.localToWorld(V(...lampObj.userData.aim)) : V(bulb.x + 0.15, 0.75, bulb.z + 0.1)
+  root.add(lights(bulb, aim))
   root.add(viewpoints())
 
   fs.mkdirSync(path.dirname(OUT), { recursive: true })
