@@ -1,0 +1,145 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   The 3D room (src/room3d). Reuses the CRT / gallery / tooltip / lightbox styles;
+   only positioning and the CRT colour variables live here.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+html.is-3d,
+html.is-3d body {
+  height: 100%;
+  overflow: hidden;
+}
+
+.room3d {
+  position: fixed;
+  inset: 0;
+  background: var(--ink);
+  user-select: none;
+  -webkit-user-select: none;
+}
+.room3d__canvas {
+  position: absolute !important;
+  inset: 0;
+}
+
+/* CRT palette the resume (ScreenView) is styled against */
+.m3-monitor,
+.m3-pc__screen {
+  --crt-bg: #100b08;
+  --crt-fg: #eadfca;
+  --crt-dim: #93846c;
+  --crt-amber: #e4a55d;
+  --crt-line: rgba(234, 223, 202, 0.13);
+  position: absolute;
+  width: 1024px;
+  height: 768px;
+}
+.m3-crt {
+  --open: 1;
+}
+.m3-app {
+  opacity: 1;
+}
+
+/* the resume on the monitor: mapped onto the glass every frame (matrix3d) */
+.m3-monitor {
+  left: 0;
+  top: 0;
+  z-index: 2;
+  transform-origin: 0 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.m3-monitor.is-live {
+  pointer-events: auto;
+}
+.m3-monitor.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.2s ease,
+    visibility 0s 0.2s;
+}
+
+/* content opened from an object */
+.m3-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  animation: m3-in 0.45s var(--ease) both;
+}
+.m3-overlay__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 7, 4, 0.84);
+}
+.m3-pc__screen {
+  left: 50%;
+  top: 50%;
+  transform-origin: 50% 50%;
+  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.6);
+  border-radius: 34px / 30px;
+}
+.m3-roll .gallery {
+  z-index: 1;
+}
+.m3-close {
+  all: unset;
+  cursor: pointer;
+  position: absolute;
+  z-index: 3;
+  top: clamp(18px, 3.6vh, 40px);
+  right: clamp(18px, 2.6vw, 44px);
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid rgba(243, 234, 217, 0.22);
+  color: var(--paper);
+  background: rgba(18, 12, 8, 0.35);
+  transition:
+    background 0.3s,
+    color 0.3s,
+    transform 0.5s var(--ease);
+}
+.m3-close:hover {
+  background: var(--paper);
+  color: var(--ink);
+  transform: rotate(90deg);
+}
+@keyframes m3-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* hover caption beside the cursor */
+.m3-tip {
+  position: fixed;
+  z-index: 14;
+}
+
+/* shutter */
+.m3-flash,
+.m3-black {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  opacity: 0;
+  pointer-events: none;
+}
+.m3-flash {
+  background: radial-gradient(ellipse at 50% 50%, #fffdf6 0%, #ffefd0 75%);
+}
+.m3-black {
+  background: #000;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .m3-overlay {
+    animation: none;
+  }
+}

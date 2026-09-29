@@ -10,6 +10,7 @@ import './styles/base.css'
 import './styles/ui.css'
 import './styles/screen.css'
 import './styles/mobile.css'
+import './styles/room3d.css'
 import App from './App'
 
 createRoot(document.getElementById('root')!).render(

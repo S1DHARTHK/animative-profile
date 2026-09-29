@@ -9,21 +9,33 @@
     "preview": "vite preview",
     "assets": "node scripts/slice-room.mjs && node scripts/make-placeholders.mjs",
     "morphs": "python scripts/build-morphs.py",
-    "capture": "node scripts/capture.mjs"
+    "capture": "node scripts/capture.mjs",
+    "model": "node scripts/room-model/build-room-model.mjs",
+    "model:small": "node scripts/room-model/build-room-model.mjs --small"
   },
   "dependencies": {
     "@fontsource-variable/inter-tight": "^5.3.0",
     "@fontsource/ibm-plex-mono": "^5.3.0",
     "@fontsource/instrument-serif": "^5.3.0",
+    "@react-three/drei": "^9.122.0",
+    "@react-three/fiber": "^8.18.0",
     "gsap": "^3.15.0",
     "lenis": "^1.3.26",
+    "n8ao": "^2.0.1",
+    "postprocessing": "^6.39.5",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "three": "^0.186.1"
   },
   "devDependencies": {
+    "@gltf-transform/core": "^4.5.1",
+    "@gltf-transform/extensions": "^4.5.1",
+    "@gltf-transform/functions": "^4.5.1",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^6.1.1",
+    "gltf-validator": "^2.0.0-dev.3.10",
+    "mikktspace": "^1.1.1",
     "puppeteer-core": "^24.43.1",
     "sharp": "^0.35.5",
     "typescript": "^7.0.2",

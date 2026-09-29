@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react'
-import { DesktopExperience } from './DesktopExperience'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import { MobileExperience } from './mobile/MobileExperience'
 import { RoomRenderer } from './room/gl/renderer'
+
+// desktop: the 3D room is the portfolio (code-split so phones never download three.js)
+const Room3DExperience = lazy(() => import('./room3d/Room3DExperience'))
 
 /** Desktop gets the full scroll-driven camera. Phones/tablets get a simplified, touch-first version. */
 function useIsCompact() {
@@ -20,5 +22,10 @@ export default function App() {
   const compact = useIsCompact()
   const [gl] = useState(RoomRenderer.supported)
   // no WebGL2 → the simplified experience still shows everything
-  return compact || !gl ? <MobileExperience /> : <DesktopExperience />
+  if (compact || !gl) return <MobileExperience />
+  return (
+    <Suspense fallback={null}>
+      <Room3DExperience />
+    </Suspense>
+  )
 }
