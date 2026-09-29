@@ -54,6 +54,14 @@ export const frames = {
   postcards: P('dunes', 'JAISALMER — 2024', 'Postcards from the dunes.', 1200, 1200),
 } satisfies Record<string, Photo>
 
+/**
+ * Frames on the walls of the 3D room (`Frame_<key>` in public/models/room-small.glb). Kept apart from `frames`, so
+ * they don't join the camera-roll stills or the mobile version.
+ */
+export const roomFrames = {
+  family: P('family', 'FAMILY', 'An old photograph.', 1280, 719),
+} satisfies Record<string, Photo>
+
 export type FrameId = keyof typeof frames
 export const FRAME_IDS = Object.keys(frames) as FrameId[]
 
