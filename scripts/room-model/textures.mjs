@@ -308,60 +308,58 @@ export async function buildTextures(root) {
   // the family photograph (small room's only frame): landscape and viewed up close, so twice the width
   T['photo-family'] = await photo('family', 1024, 512)
 
-  // sneaker uppers for the shoe stack. Mapped the way sneakerUpper() in the builder lays out its UVs:
-  // u = heel → toe, v = sole line (0) → top centre line (1), so the three stripes, overlays, collar lining and
-  // laces are painted where they sit on the shoe.
+  // wall shelves: glued-plank slab wood (grain along u; tile = 1.2 m) and black wire mesh
   {
-    const grain = fbm(71, [64, 128, 256])
-    const nap = fbm(72, [16, 32, 64])
-    const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16))
-    const mixc = (a, b, k) => a.map((x, i) => x + (b[i] - x) * k)
-    const ss = (e0, e1, x) => smooth(Math.min(1, Math.max(0, (x - e0) / (e1 - e0))))
-    const collar = (u) => (u > 0.035 && u < 0.36 ? Math.sin((Math.PI * (u - 0.035)) / 0.325) ** 0.6 : 0)
-    const SHOES = {
-      // adidas Campus-style suede with white leather stripes
-      'shoe-maroon': { base: '#5e1a44', stripe: '#eee8dc', heel: '#4c1438', suede: 1 },
-      'shoe-grey': { base: '#8f8e8b', stripe: '#f0ece3', heel: '#7c7b78', suede: 1 },
-      // Samba-style white leather, green stripes and heel, light suede T-toe
-      'shoe-green': { base: '#efece4', stripe: '#1d5638', heel: '#1d5638', toe: '#d6d0c4', suede: 0 },
-      // Dunk-style "panda": white leather with black overlays and swoosh
-      'shoe-panda': { base: '#f2f0eb', overlay: '#1b1b1d', suede: 0 },
-    }
-    for (const [key, s] of Object.entries(SHOES)) {
-      const base = rgb(s.base)
-      T[key] = await fromPixels(512, 256, (u, y) => {
-        const v = 1 - y
-        let c = base
-        if (s.heel && u < 0.075 && v > 0.28) c = rgb(s.heel)
-        if (s.toe && (u > 0.8 || (u > 0.7 && v > 0.8))) c = rgb(s.toe)
-        if (s.stripe && v > 0.09 && v < 0.72)
-          for (let k = 0; k < 3; k++) {
-            const d = Math.abs(u - (0.45 + k * 0.07 + (v - 0.1) * 0.16))
-            if (d < 0.018) c = d > 0.015 ? mixc(rgb(s.stripe), [0, 0, 0], 0.25) : rgb(s.stripe)
-          }
-        if (s.overlay) {
-          const o = rgb(s.overlay)
-          if (u > 0.8 - 0.05 * v || u < 0.19 + 0.06 * v || (v > 0.74 && u > 0.36 && u < 0.8)) c = o
-          const t = 0.075 * ss(0.2, 0.5, u) * (1 - ss(0.64, 0.7, u))
-          if (u > 0.2 && Math.abs(v - (0.26 + 3.2 * (u - 0.52) ** 2)) < t) c = o
-        }
-        // laces across the vamp, eyelets along its edges, tongue between the rows
-        if (u > 0.4 && u < 0.69) {
-          const k = Math.round((u - 0.415) / 0.05)
-          const du = Math.abs(u - (0.415 + k * 0.05))
-          if (v > 0.86) c = du < 0.01 ? [238, 235, 227] : mixc(c, [0, 0, 0], s.overlay ? 0.1 : 0.2)
-          else if (v > 0.81 && du < 0.008 && k >= 0 && k <= 5) c = [40, 36, 33]
-        }
-        // stitching above the sole
-        if (v > 0.075 && v < 0.088) c = mixc(c, [0, 0, 0], 0.18)
-        // the collar opening (the builder dips these vertices into the shoe): light lining, darker insole
-        const open = collar(u) * ss(0.66, 0.8, v)
-        if (open > 0.45) c = mixc([226, 218, 204], [120, 112, 102], ss(0.86, 1, v))
-        const n = (grain(u * 2, y) - 0.5) * 8 + (s.suede ? (nap(u * 2, y) - 0.5) * 30 : 0)
-        return [c[0] + n, c[1] + n, c[2] + n * 0.95]
-      })
-    }
+    const warp = fbm(81, [2, 4, 8])
+    const fine = fbm(82, [64, 128, 256])
+    const r = rng(83)
+    const tone = Array.from({ length: 8 }, () => (r() - 0.5) * 26)
+    T.slab = await fromPixels(1024, 1024, (u, v, x, y) => {
+      const plank = Math.floor(y / 128)
+      const ly = y % 128
+      const w = warp(u * 2 + plank * 0.37, v * 4 + plank * 0.21)
+      const grain = Math.sin(2 * Math.PI * (v * 96 + w * 3.2)) * 0.5 + 0.5
+      const ring = Math.sin(2 * Math.PI * (v * 23 + w * 1.4)) * 0.5 + 0.5
+      const n = (fine(u, v) - 0.5) * 12 + tone[plank] - grain ** 3 * 18 - ring ** 6 * 14
+      const seam = ly < 2 ? -38 : ly < 4 ? -12 : 0
+      return [206 + n + seam, 148 + n * 0.85 + seam, 92 + n * 0.6 + seam * 0.8]
+    })
   }
+  T.weave = await fromPixels(256, 256, (u, v, x, y) => {
+    const line = x % 16 < 3 || y % 16 < 3
+    const c = line ? 58 + ((x * 7 + y * 3) % 5) * 3 : 18
+    return [c, c, c]
+  })
 
+  // modern desk setup: the monitor's wallpaper
+  {
+    // misty mountain ridges at dusk (as on the monitor in the reference photo)
+    const r = rng(97)
+    const ridge = (y0, amp, color, peaks) => {
+      const waves = Array.from({ length: 3 }, (_, k) => [(0.0025 + r() * 0.003) * (k + 1), r() * 6.28, 0.6 / (k + 1)])
+      let d = `M 0 1024`
+      for (let x = 0; x <= 2048; x += 8) {
+        let h = 0
+        for (const [f, p, a] of waves) h += a * (1 - Math.abs(Math.sin(x * f + p))) ** 1.6
+        let y = y0 - amp * h
+        if (peaks && (x / 8) % 2 === 1) y -= 6 + r() * 16 // a pine-topped near ridge
+        d += ` L ${x} ${y.toFixed(1)}`
+      }
+      return `<path d="${d} L 2048 1024 Z" fill="${color}"/>`
+    }
+    const mist = (y, h, op) => `<rect x="0" y="${y}" width="2048" height="${h}" fill="url(#mist)" opacity="${op}"/>`
+    T.wallpaper = await fromSVG(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="1024"><defs>
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7d7a93"/><stop offset=".45" stop-color="#b59fae"/><stop offset=".7" stop-color="#e2bcae"/><stop offset="1" stop-color="#d9b2a8"/></linearGradient>
+        <linearGradient id="mist" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9d6d2" stop-opacity="0"/><stop offset=".6" stop-color="#e9d6d2" stop-opacity=".75"/><stop offset="1" stop-color="#e9d6d2" stop-opacity="0"/></linearGradient>
+      </defs><rect width="2048" height="1024" fill="url(#sky)"/>
+      ${ridge(560, 300, '#9a8ea4', false)}${mist(520, 160, 0.7)}
+      ${ridge(640, 260, '#76698a', false)}${mist(620, 150, 0.6)}
+      ${ridge(730, 230, '#54496a', false)}${mist(720, 140, 0.5)}
+      ${ridge(820, 200, '#352f45', false)}${mist(830, 120, 0.35)}
+      ${ridge(930, 150, '#1d1a26', true)}</svg>`,
+      { mime: 'image/jpeg', quality: 88 },
+    )
+  }
   return T
 }
