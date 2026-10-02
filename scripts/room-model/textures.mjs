@@ -482,20 +482,77 @@ export async function buildTextures(root) {
     T.weaveRugN = await normalMap(512, (x, y) => cell(x, y) * 1.4 + n(x / 512, y / 512) * 0.2, 1.4)
   }
   {
-    // braided jute pouf: rows of chevron loops
-    const n = fbm(162, [32, 64])
-    const braid = (x, y) => {
-      const row = Math.floor(y / 32)
-      const ly = (y % 32) / 32
-      const lx = ((x + (row % 2) * 16) % 32) / 32
-      const chevron = Math.abs(lx - 0.5) * 2
-      return Math.sin(Math.PI * ((ly + chevron * 0.5) % 1))
-    }
-    T.braid = await fromPixels(512, 512, (u, v, x, y) => {
-      const c = 120 + braid(x, y) * 70 + (n(u, v) - 0.5) * 18
-      return [c * 1.12, c * 0.9, c * 0.6]
+    // braided jute rope: a herringbone of strands along the rope (u, one tile per 3 cm) round its girth (v)
+    const n = fbm(162, [32, 64, 128])
+    const braid = (x, y) => Math.sin(2 * Math.PI * ((x / 256) * 2 + Math.abs(y / 128 - 0.5) * 1.6)) * 0.5 + 0.5
+    T.braid = await fromPixels(256, 128, (u, v, x, y) => {
+      const c = 118 + braid(x, y) ** 0.7 * 78 + (n(u, v) - 0.5) * 26
+      return [c * 1.12, c * 0.9, c * 0.62]
     })
-    T.braidN = await normalMap(512, (x, y) => braid(x, y) * 1.6, 1.6)
+    T.braidN = await normalMap(256, (x, y) => braid(x, (y * 128) / 256) * 1.4 + n(x / 256, y / 256) * 0.3, 1.6)
+  }
+  {
+    // velvet: a fine pile brushed into soft lighter and darker patches (tinted per fabric)
+    const crush = fbm(165, [3, 6, 12])
+    const fine = fbm(166, [128, 256])
+    T.velvet = await fromPixels(512, 512, (u, v) => {
+      const c = 212 + (crush(u, v) - 0.5) * 40 + (fine(u, v) - 0.5) * 8
+      return [c, c, c]
+    })
+    T.velvetN = await normalMap(512, (x, y) => crush(x / 512, y / 512) * 0.6 + fine(x / 512, y / 512) * 0.35, 1.2)
+  }
+  {
+    // pale sandy stone (the pebble planters): a soft mottle, a fine grain, scattered pores
+    const mott = fbm(190, [4, 8, 16])
+    const grain = fbm(191, [128, 256])
+    const r = rng(192)
+    const pores = new Float32Array(512 * 512)
+    for (let k = 0; k < 2600; k++) {
+      const x = Math.floor(r() * 512)
+      const y = Math.floor(r() * 512)
+      const d = 0.4 + r() * 0.6
+      pores[y * 512 + x] = d
+      if (r() < 0.4) pores[y * 512 + ((x + 1) % 512)] = d * 0.6
+    }
+    T.stone = await fromPixels(512, 512, (u, v, x, y) => {
+      const c = 1 + (mott(u, v) - 0.5) * 0.08 + (grain(u, v) - 0.5) * 0.08 - pores[y * 512 + x] * 0.22
+      return [232 * c, 226 * c, 215 * c]
+    })
+    T.stoneN = await normalMap(512, (x, y) => grain(x / 512, y / 512) * 0.8 + mott(x / 512, y / 512) * 0.3 - pores[y * 512 + x] * 1.2, 1.2)
+  }
+  {
+    // bird-of-paradise blade (across × base→tip, the tip at the top): glossy deep green, a pale midrib, fine
+    // parallel veins sweeping out toward the tip
+    const n = fbm(180, [4, 8, 32])
+    const vein = (a, along) => Math.abs(Math.sin(Math.PI * (along * 70 - a * 22))) ** 14
+    T.birdLeaf = await fromPixels(256, 512, (u, v) => {
+      const a = Math.abs(u - 0.5) * 2
+      const along = 1 - v
+      const mid = Math.exp(-((a / 0.035) ** 2))
+      const k = 0.92 + (n(u, v) - 0.5) * 0.25 + vein(a, along) * 0.1 - a * a * 0.1 + along * 0.06
+      const leaf = [54 * k, 92 * k, 44 * k]
+      return leaf.map((c, i) => c + mid * ([150, 168, 98][i] - c))
+    })
+    T.birdLeafN = await normalMap(256, (x, y) => {
+      const a = Math.abs(x / 256 - 0.5) * 2
+      return -vein(a, 1 - y / 256) * 0.6 + Math.exp(-((a / 0.035) ** 2)) * 1.5
+    }, 1.4)
+  }
+  // olive leaf: grey-green, a paler midrib (the undersides are the same texture, tinted silvery)
+  T.oliveLeaf = await fromPixels(64, 128, (u) => {
+    const a = Math.abs(u - 0.5) * 2
+    const mid = Math.exp(-((a / 0.12) ** 2))
+    const k = 1 - a * 0.12
+    return [104 * k + mid * 40, 118 * k + mid * 36, 86 * k + mid * 30]
+  })
+  {
+    // spiky rosette leaf: dark green, lighter toward the margins, fine lengthwise lines
+    const n = fbm(181, [4, 16])
+    T.agaveLeaf = await fromPixels(64, 256, (u, v) => {
+      const a = Math.abs(u - 0.5) * 2
+      const k = 0.85 + Math.sin(u * 32 * Math.PI) * 0.04 + a ** 4 * 0.35 + (n(u, v) - 0.5) * 0.12
+      return [40 * k, 70 * k, 42 * k]
+    })
   }
   // light grey shag: long tufts (noise at several scales), a soft pile normal
   {
@@ -534,12 +591,5 @@ export async function buildTextures(root) {
       return [42 * c, 78 * c, 46 * c]
     })
   }
-  // a white pillow with black woven stripes
-  T.pillowStripe = await fromPixels(256, 256, (u, v, x, y) => {
-    const stripe = Math.floor(y / 16) % 3 === 0 && (y % 16) < 7
-    const c = stripe ? 40 : 232 + ((x + y) % 4) * 3
-    return [c, c, c * 0.98]
-  })
-
   return T
 }
