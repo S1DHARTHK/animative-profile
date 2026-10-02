@@ -75,43 +75,60 @@ const PROFILES = {
   small: {
     out: 'room-small.glb',
     realism: true, // normal maps + warmer surfaces (the large profile stays byte-identical without it)
+    theme: 'night', // the modern room at night: warm greige paint, carpet, LED lines, downlights, dark garden outside
     W: 3.3,
     D: 4.0,
     H: 2.9,
-    windows: [-1.15],
+    windows: [],
+    // French balcony doors in the left wall where the window was (centre z, width, height)
+    balcony: { z: -0.98, w: 1.7, h: 2.36 },
     win: { w: 1.15, h: 1.25, sill: 1.05 },
     door: { z: 1.3, w: 0.9, h: 2.1 },
     layout: ({ X0, X1, Z0, DOOR }) => ({
-      // the wooden slab table on its black steel frame, against the back wall, with the modern set on it (the
-      // ultrawide sits under the family photo)
-      desk: { table: 'steel', set: 'modern', w: 1.7, d: 0.75, top: 0.76, x: 0.0, z: Z0 + 0.02 + 0.375 },
-      // the teak & cane chair from the photographs, pulled up to the desk (its back stays below the camera's path
-      // out from the screen)
-      chair: [0.0, Z0 + 1.05, -6],
-      // wooden wall shelves on black rails, above the right end of the desk
-      shelves: { x: 1.0, w: 0.72, depth: 0.22, ys: [1.3, 1.62, 1.94, 2.26] },
+      // modern dark room (reference photo): a minimal white desk against the back wall under two floating shelves,
+      // a gaming chair beside it, LED lines (tray ceiling, wall panel, floor, shelves), a crystal drum pendant
+      desk: { table: 'minimal', set: 'dark', w: 1.4, d: 0.65, top: 0.75, x: 0.25, z: Z0 + 0.03 + 0.325 },
+      // the gaming chair, pulled out at the desk's right and turned to the monitor: clear of the balcony doors' swing and
+      // (its back is tall) of the camera's path out from the screen
+      chair: [0.8, Z0 + 1.05, 25],
+      chairStyle: 'gaming',
+      floatShelves: { x: 0.4, w: 1.0, depth: 0.22, ys: [1.5, 1.9] },
       rug: null,
-      shelf: { x: X0 + 0.19, z: 0.9 },
+      shelf: null,
       bench: null,
       plants: [],
-      // a single frame — the family photograph — in the centre of the back wall; no poster on the right wall
-      back: [['family', 1.0, 0.66, 'family', undefined, 0, 1.86]],
+      // the family photograph, to the left of the shelves
+      back: [['family', 0.9, 0.6, 'family', undefined, -1.0, 1.72]],
       street: null,
-      postcards: [
-        ['dunes', 0.12, -1.72, 2.02, 3],
-        ['ridge-gold', 0.15, -1.6, 1.82, -4],
-        ['city-dusk', 0.14, -1.78, 1.66, 2],
-        ['window-light', 0.1, -1.58, 1.52, -2],
-      ],
+      postcards: [],
       extraFrames: [],
-      sketches: [
-        [-0.3, 1.9, 3],
-        [-0.33, 2.3, -4],
-      ],
+      sketches: [],
       switchZ: DOOR.z - 0.75,
-      fan: [0.15, -0.6],
-      sun: { pos: [-5.94, 2.78, -3.23], look: [X1, 0.82, 0.45], intensity: 2.8, color: 0xffa24e },
-      fill: { pos: [0.2, 2.0, 0.3], intensity: 3 },
+      fan: null,
+      // a cluster of rattan ball pendants beside the globe shelf (its left, toward the front corner); the room's light
+      cluster: { x: X0 + 0.42, z: Z1 - 0.28 },
+      // a bean-bag corduroy loveseat against the front wall (behind you as you face the desk), facing the room
+      sofa: { x: -0.15, z: Z1 - 0.6 },
+      // a spherical bookshelf on the left wall, between the window's curtain and the front corner
+      globeShelf: { z: 0.85, y: 1.45, r: 0.8, depth: 0.3, shelves: 6, fins: [-0.52, -0.18, 0.18, 0.52] },
+      // sheer voile either side of the balcony doors: gathered toward `outer`, the free edge at `inner` (z on the left wall)
+      sheers: [
+        { outer: -1.98, inner: -1.45 },
+        { outer: 0.02, inner: -0.5 },
+      ],
+      // night: a faint cool moon through the window; the pendant lights the room, the shelf LED the desk
+      sun: { pos: [-5.94, 3.6, -3.23], look: [X1, 0.4, 0.45], intensity: 0.6, color: 0x9fb4ff },
+      fill: { pos: [X0 + 0.42, 1.92, Z1 - 0.28], intensity: 2, color: 0xffb870 },
+      lamp: { color: 0xffe6cc },
+      // twin recessed downlights in the soffit (wall, position along it), each washing the wall below with a scallop
+      downlights: [
+        ['back', -1.0],
+        ['back', 1.22],
+        ['right', -1.3],
+        ['right', -0.2],
+        ['left', 0.55],
+        ['left', 1.45],
+      ],
       views: [
         ['View_Doorway', [1.1, 1.6, 1.85], [-0.1, 1.05, -1.6], 62],
         ['View_Shelf', [-0.75, 1.55, 1.75], [0.55, 1.0, -1.7], 58],
@@ -196,24 +213,42 @@ const MATERIALS = {
   cable: { color: '#cfc6b1', rough: 0.6 },
   linen: { color: '#d9cdb8', rough: 0.95 },
   cableBlack: { color: '#111111', rough: 0.6 },
-  // wall shelves (small room)
-  slabWood: { tex: 'slab', rough: 0.52 },
+  // modern dark room (small room)
   blackSteel: { color: '#1b1b1b', rough: 0.42, metal: 0.6 },
-  weaveBlack: { tex: 'weave', rough: 0.6, metal: 0.3 },
-  ceramicDark: { color: '#3d332c', rough: 0.42 },
   binderBlack: { color: '#1c1c1e', rough: 0.55 },
-  // modern desk setup (small room)
+  bookGray: { color: '#55565a', rough: 0.7 },
+  wallPanel: { tex: 'plasterGray', color: '#cbc3b6', rough: 0.88, normal: 'paintN', normalScale: 0.3 },
+  ledStrip: { color: '#ffffff', emissive: '#ffe4c2', emissiveStrength: 8 },
+  ledWash: { color: '#000000', tex: 'ledGlow', alpha: 'BLEND', emissive: '#ffd9ae', emissiveTex: 'ledGlow', emissiveStrength: 1.2, double: true, rough: 1 },
+  scallopWash: { color: '#000000', tex: 'scallop', alpha: 'BLEND', emissive: '#ffe0ba', emissiveTex: 'scallop', emissiveStrength: 1, double: true, rough: 1 },
+  trimWhite: { color: '#e9e6e0', rough: 0.4 },
+  shelfOak: { tex: 'oak', color: '#fff2e2', rough: 0.5, normal: 'woodN', normalScale: 0.4 },
+  bookWhite: { color: '#ebe6dc', rough: 0.7 },
+  downlightLens: { color: '#ffffff', emissive: '#ffe7c4', emissiveStrength: 6 },
+  deskTop: { color: '#efefed', rough: 0.35 },
   monitorBlack: { color: '#141416', rough: 0.35, metal: 0.4 },
-  wallpaper: { color: '#000000', emissive: '#ffffff', emissiveTex: 'wallpaper', emissiveStrength: 1, rough: 0.22 },
+  wallpaperMono: { color: '#000000', emissive: '#ffffff', emissiveTex: 'wallpaperMono', emissiveStrength: 0.8, rough: 0.22 },
   screenWindow: { color: '#100b08', rough: 0.25 },
-  lightStrip: { color: '#fff4e0', emissive: '#fff1dc', emissiveStrength: 4 },
-  kbCase: { color: '#2a2a2c', rough: 0.4, metal: 0.3 },
-  keyDark: { color: '#38383b', rough: 0.55 },
-  keyTan: { color: '#c7ae88', rough: 0.55 },
+  kbBlack: { color: '#1d1d1f', rough: 0.55 },
+  keyBlack: { color: '#2a2a2d', rough: 0.55 },
   plasticDark: { color: '#262628', rough: 0.45 },
-  deskMat: { color: '#2c2a28', rough: 0.95 },
-  mugBlack: { color: '#1e1e1f', rough: 0.32 },
-  notebookDark: { color: '#2b241f', rough: 0.7 },
+  caseBlack: { color: '#161618', rough: 0.6 },
+  chairBlack: { color: '#1b1b1d', rough: 0.45 },
+  chairWhite: { color: '#e4e4e2', rough: 0.5 },
+  chairHole: { color: '#0b0b0c', rough: 0.8 },
+  shelfBlack: { color: '#1b1b1d', rough: 0.5 },
+  sphereDark: { color: '#2a2a2e', rough: 0.2, metal: 0.8 },
+  potDark: { color: '#2b2b2e', rough: 0.6 },
+  frameWhite: { color: '#efece5', rough: 0.45 },
+  corduroy: { tex: 'corduroy', normal: 'corduroyN', normalScale: 1, rough: 0.92 },
+  sheer: { color: '#f7f4ee', opacity: 0.5, alpha: 'BLEND', double: true, rough: 0.95 },
+  stone: { tex: 'tiles', color: '#ddd7cc', rough: 0.7 },
+  stoneWhite: { color: '#e9e5dc', rough: 0.75 },
+  cypress: { color: '#2f3d27', rough: 0.95 },
+  shrub: { color: '#3c4a2c', rough: 0.95 },
+  wicker: { tex: 'wicker', alpha: 'MASK', cutoff: 0.45, double: true, rough: 0.8 },
+  rope: { color: '#b8956a', rough: 0.95 },
+  edisonBulb: { color: '#ffd9a0', emissive: '#ffb35c', emissiveStrength: 7 },
 }
 const BOOK_COLORS = ['#2f3b33', '#d8cdb4', '#7a3b2e', '#34495e', '#b58c4f', '#5a4a42', '#8a8d7a', '#27313d', '#a4553a', '#c9bfa7']
 BOOK_COLORS.forEach((c, i) => (MATERIALS[`book${i}`] = { color: c, rough: 0.7 }))
@@ -227,6 +262,18 @@ if (P.realism) {
   Object.assign(MATERIALS.teak, { normal: 'woodN', normalScale: 0.5 })
   Object.assign(MATERIALS.oak, { normal: 'woodN', normalScale: 0.4 })
   Object.assign(MATERIALS.skirting, { color: '#8a837a' })
+}
+// the modern dark room: charcoal plaster, carpet, dark trims, a night garden outside
+if (P.theme === 'night') {
+  // warm light greige paint with a fine roller stipple, a lighter ceiling, trims painted to match (reference photo)
+  Object.assign(MATERIALS.wall, { tex: 'plasterGray', color: '#d6cfc3', rough: 0.9, normal: 'paintN', normalScale: 0.35 })
+  Object.assign(MATERIALS.ceiling, { tex: 'plasterGray', color: '#ebe7df', rough: 0.92, normal: 'paintN', normalScale: 0.25 })
+  Object.assign(MATERIALS.floorTile, { tex: 'carpet', normal: 'carpetN', normalScale: 0.7, rough: 1 })
+  Object.assign(MATERIALS.skirting, { color: '#ddd7cc', rough: 0.45 })
+  Object.assign(MATERIALS.sill, { color: '#e3ded5' })
+  Object.assign(MATERIALS.door, { color: '#e1dcd3', rough: 0.5 })
+  Object.assign(MATERIALS.switchPlate, { color: '#ece8e1' })
+  Object.assign(MATERIALS.garden, { emissive: '#3b4c72', emissiveStrength: 0.5 })
 }
 const PHOTOS = ['pines-mist', 'road-long', 'path-figure', 'coast-headland', 'street-car', 'dunes', 'ridge-gold', 'city-dusk', 'window-light', 'night-sky', 'family']
 PHOTOS.forEach((p) => (MATERIALS[`photo-${p}`] = { tex: `photo-${p}`, rough: 0.55 }))
@@ -337,7 +384,9 @@ function architecture() {
   // volumes make two faces intersect along each corner, which flickers (z-fighting) under strong light
   const sideLen = P.realism ? D : D + 2 * T
   // left wall: shape x = -z  (rotateY +90°), windows cut through
-  const left = wallWithHoles(sideLen, WINDOWS.map((z) => ({ c: -z, y: WIN.sill, w: WIN.w, h: WIN.h })))
+  const holes = WINDOWS.map((z) => ({ c: -z, y: WIN.sill, w: WIN.w, h: WIN.h }))
+  if (P.balcony) holes.push({ c: -P.balcony.z, y: 0.001, w: P.balcony.w, h: P.balcony.h - 0.001 })
+  const left = wallWithHoles(sideLen, holes)
   left.rotateY(Math.PI / 2).translate(X0 - T, 0, 0)
   g.add(M(boxUV(left, 1), 'wall', 'Wall_Left'))
   // right wall: shape x = z  (rotateY -90°), door cut through
@@ -350,7 +399,13 @@ function architecture() {
   const k = 0.1
   sk.add(M(box(W, k, 0.014).translate(0, k / 2, Z0 + 0.007), 'skirting'))
   sk.add(M(box(W, k, 0.014).translate(0, k / 2, Z1 - 0.007), 'skirting'))
-  sk.add(M(box(0.014, k, D).translate(X0 + 0.007, k / 2, 0), 'skirting'))
+  if (P.balcony) {
+    // left skirting stops at the balcony doors' casing
+    const a = P.balcony.z - P.balcony.w / 2 - 0.09
+    const b = P.balcony.z + P.balcony.w / 2 + 0.09
+    sk.add(M(box(0.014, k, a - Z0).translate(X0 + 0.007, k / 2, (Z0 + a) / 2), 'skirting'))
+    sk.add(M(box(0.014, k, Z1 - b).translate(X0 + 0.007, k / 2, (b + Z1) / 2), 'skirting'))
+  } else sk.add(M(box(0.014, k, D).translate(X0 + 0.007, k / 2, 0), 'skirting'))
   const d0 = DOOR.z - DOOR.w / 2 - 0.08
   const d1 = DOOR.z + DOOR.w / 2 + 0.08
   sk.add(M(box(0.014, k, d0 - Z0).translate(X1 - 0.007, k / 2, (Z0 + d0) / 2), 'skirting'))
@@ -632,10 +687,10 @@ function monstera(seed, scale = 1, count = 9) {
   return bake(g)
 }
 
-function potPlant(potR, potH, leaves, seed) {
+function potPlant(potR, potH, leaves, seed, potMat = 'ceramicCream') {
   const r = rand(seed)
   const g = G('PotPlant')
-  g.add(M(lathe([[0, 0], [potR * 0.8, 0], [potR, potH], [potR * 1.05, potH + 0.003], [potR * 0.96, potH + 0.003], [potR * 0.9, potH - 0.01], [0, potH - 0.01]], 32), 'ceramicCream'))
+  g.add(M(lathe([[0, 0], [potR * 0.8, 0], [potR, potH], [potR * 1.05, potH + 0.003], [potR * 0.96, potH + 0.003], [potR * 0.9, potH - 0.01], [0, potH - 0.01]], 32), potMat))
   g.add(M(cyl(potR * 0.9, potR * 0.9, 0.006, 24).translate(0, potH - 0.012, 0), 'soil'))
   for (let i = 0; i < leaves; i++) {
     const a = (i / leaves) * 360 + r() * 40
@@ -692,100 +747,110 @@ function trailingPlant(seed) {
   return g
 }
 
-/* ── wall shelves (small room): wooden shelves on black rails ─────────────────────────────── */
-/** a wire globe: meridians and parallels of thin black rod */
-function wireSphere(r) {
-  const g = G('Wire_Sphere')
-  for (let k = 0; k < 6; k++) g.add(M(new THREE.TorusGeometry(r, 0.0016, 4, 56).rotateY((k * Math.PI) / 6).translate(0, r, 0), 'blackSteel'))
-  for (const lat of [-60, -30, 0, 30, 60]) {
-    const a = (lat * Math.PI) / 180
-    g.add(M(new THREE.TorusGeometry(r * Math.cos(a), 0.0016, 4, 48).rotateX(Math.PI / 2).translate(0, r + r * Math.sin(a), 0), 'blackSteel'))
-  }
-  return g
-}
-/** a closed book lying flat: black cover, page block on three sides */
-function blackBook(w, h, d) {
-  const g = G('Book')
-  g.add(M(box(w, h, d).translate(0, h / 2, 0), 'binderBlack'))
-  g.add(M(box(w - 0.012, h - 0.008, d - 0.006).translate(0.007, h / 2, 0.004), 'pages'))
-  return g
-}
-
+/* ── modern dark room (small room): LED fit-out, minimal desk, gaming chair, floating shelves ───── */
 /**
- * Wooden wall shelves on two black rails (from the reference photo). Origin: on the wall face, centred; the shelves
- * reach toward +z. Holds a wire globe, black books and a small picture, a little pot, a woven box, a vase and binders.
+ * A soft wash of LED light on a surface: a plane `w` × `h` whose glow is strongest along one long edge (where the strip
+ * is) and fades away from it. `edge` = centre of that edge, `along` = direction of the strip, `away` = direction the
+ * light fades, `facing` = the surface normal (into the room). The site draws these additively.
  */
-function wallShelves() {
-  const g = G('Wall_Shelves')
-  const { ys, w, depth } = L.shelves
-  const th = 0.034
-  const railX = w / 2 - 0.13
-  const unit = G('Shelf_Unit')
-  for (const s of [-1, 1]) {
-    const y0 = ys[0] - 0.32
-    const y1 = ys[ys.length - 1] + 0.2
-    unit.add(M(box(0.028, y1 - y0, 0.012).translate(s * railX, (y0 + y1) / 2, 0.006), 'blackSteel'))
-    for (const y of ys) unit.add(M(box(0.012, 0.028, depth - 0.03).translate(s * railX, y - th - 0.014, depth / 2), 'blackSteel'))
+function ledWash(w, h, edge, along, away, facing, mat = 'ledWash') {
+  const g = new THREE.PlaneGeometry(w, h).translate(0, h / 2, 0)
+  const m = new THREE.Matrix4().makeBasis(V(...along), V(...away), V(...facing))
+  g.applyMatrix4(m).translate(...V(...edge).addScaledVector(V(...facing), 0.003).toArray())
+  return M(g, mat)
+}
+/** a thin LED strip (bright emissive bar) */
+const ledStrip = (w, h, d, x, y, z) => M(box(w, h, d).translate(x, y, z), 'ledStrip')
+
+/** tray ceiling with a cove LED, a dark panel along the back wall with an LED on its top edge, LED lines at the floor */
+function fitout() {
+  const g = G('Fitout')
+  const drop = 0.15
+  const band = 0.4
+  const soffit = G('Ceiling_Soffit')
+  soffit.add(M(box(W, drop, band, 1.5).translate(0, H - drop / 2, Z0 + band / 2), 'ceiling'))
+  soffit.add(M(box(W, drop, band, 1.5).translate(0, H - drop / 2, Z1 - band / 2), 'ceiling'))
+  soffit.add(M(box(band, drop, D - 2 * band, 1.5).translate(X0 + band / 2, H - drop / 2, 0), 'ceiling'))
+  soffit.add(M(box(band, drop, D - 2 * band, 1.5).translate(X1 - band / 2, H - drop / 2, 0), 'ceiling'))
+  g.add(bake(soffit))
+  const leds = G('LED_Strips')
+  const washes = G('LED_Washes')
+  // cove: a strip along the top of each inner soffit face, washing the recessed ceiling
+  const iw = W - 2 * band
+  const id = D - 2 * band
+  const top = H - 0.003
+  leds.add(ledStrip(iw, 0.01, 0.008, 0, H - 0.012, Z0 + band + 0.004))
+  leds.add(ledStrip(iw, 0.01, 0.008, 0, H - 0.012, Z1 - band - 0.004))
+  leds.add(ledStrip(0.008, 0.01, id, X0 + band + 0.004, H - 0.012, 0))
+  leds.add(ledStrip(0.008, 0.01, id, X1 - band - 0.004, H - 0.012, 0))
+  washes.add(ledWash(iw, 0.75, [0, top, Z0 + band], [1, 0, 0], [0, 0, 1], [0, -1, 0]))
+  washes.add(ledWash(iw, 0.75, [0, top, Z1 - band], [1, 0, 0], [0, 0, -1], [0, -1, 0]))
+  washes.add(ledWash(id, 0.75, [X0 + band, top, 0], [0, 0, 1], [1, 0, 0], [0, -1, 0]))
+  washes.add(ledWash(id, 0.75, [X1 - band, top, 0], [0, 0, 1], [-1, 0, 0], [0, -1, 0]))
+  // the inner soffit faces catch the strip too
+  washes.add(ledWash(iw, drop, [0, H - 0.005, Z0 + band], [1, 0, 0], [0, -1, 0], [0, 0, 1]))
+  washes.add(ledWash(iw, drop, [0, H - 0.005, Z1 - band], [1, 0, 0], [0, -1, 0], [0, 0, -1]))
+  washes.add(ledWash(id, drop, [X0 + band, H - 0.005, 0], [0, 0, 1], [0, -1, 0], [1, 0, 0]))
+  washes.add(ledWash(id, drop, [X1 - band, H - 0.005, 0], [0, 0, 1], [0, -1, 0], [-1, 0, 0]))
+  // back-wall panel (behind the desk) with an LED on its top edge: the wall above glows behind the monitor
+  const ph = 1.0
+  g.add(M(box(W, ph, 0.02, 1).translate(0, ph / 2, Z0 + 0.01), 'wallPanel', 'Wall_Panel'))
+  leds.add(ledStrip(W, 0.008, 0.012, 0, ph + 0.004, Z0 + 0.012))
+  washes.add(ledWash(W, 0.6, [0, ph + 0.008, Z0], [1, 0, 0], [0, 1, 0], [0, 0, 1]))
+  // floor LEDs along the side walls (around the door on the right)
+  const k = 0.1
+  const d0 = DOOR.z - DOOR.w / 2 - 0.08
+  const d1 = DOOR.z + DOOR.w / 2 + 0.08
+  const leftRuns = P.balcony
+    ? [
+        [Z0 + 0.02, P.balcony.z - P.balcony.w / 2 - 0.11],
+        [P.balcony.z + P.balcony.w / 2 + 0.11, Z1 - 0.02],
+      ]
+    : [[Z0 + 0.02, Z1 - 0.02]]
+  for (const [a, b] of leftRuns) {
+    leds.add(ledStrip(0.01, 0.006, b - a, X0 + 0.008, k + 0.003, (a + b) / 2))
+    washes.add(ledWash(b - a, 0.42, [X0, k, (a + b) / 2], [0, 0, 1], [0, 1, 0], [1, 0, 0]))
   }
-  for (const y of ys) unit.add(M(box(w, th, depth, 1.2).translate(0, y - th / 2, depth / 2 + 0.012), 'slabWood'))
-  g.add(bake(unit))
-  const on = (k, obj, x, z = depth / 2 + 0.01, ry = 0) => g.add(at(obj, x, ys[ys.length - 1 - k], z, ry))
-  // top → bottom
-  on(0, bake(wireSphere(0.085)), 0.14)
-  const stack = G('Book_Stack')
-  ;[0.032, 0.026, 0.03, 0.024].reduce((y, h, i) => {
-    stack.add(at(blackBook(0.2 - i * 0.008, h, 0.15), (i % 2 ? 0.006 : -0.004), y, 0, (i % 2 ? -3 : 2)))
-    return y + h
-  }, 0)
-  on(1, bake(stack), -0.13)
-  const pic = G('Shelf_Picture')
-  pic.add(M(box(0.15, 0.19, 0.014).translate(0, 0.095, 0), 'mat'))
-  pic.add(M(box(0.085, 0.095, 0.002).translate(0, 0.1, 0.008), 'blackMatte'))
-  pic.rotation.x = -0.1
-  on(1, bake(G('Picture', pic)), 0.19, depth / 2 - 0.03)
-  on(2, M(lathe([[0, 0], [0.036, 0], [0.038, 0.07], [0.034, 0.078], [0.03, 0.074], [0, 0.074]], 28), 'ceramicDark', 'Shelf_Pot'), 0.24)
-  on(3, M(box(0.2, 0.13, 0.15, 0.3).translate(0, 0.065, 0), 'weaveBlack', 'Woven_Box'), -0.17)
-  on(3, M(lathe([[0, 0], [0.03, 0], [0.042, 0.04], [0.036, 0.09], [0.018, 0.11], [0.02, 0.125], [0, 0.125]], 28), 'ceramicDark', 'Shelf_Vase'), 0.03)
-  const binders = G('Binders')
-  for (let i = 0; i < 4; i++) {
-    const x = i * 0.043
-    binders.add(M(box(0.04, 0.27, 0.2).translate(x, 0.135, 0), 'binderBlack'))
-    binders.add(M(box(0.024, 0.055, 0.002).translate(x, 0.19, 0.101), 'pages'))
-    binders.add(M(cyl(0.006, 0.006, 0.003, 12).rotateX(Math.PI / 2).translate(x, 0.07, 0.101), 'pages'))
+  for (const [a, b] of [
+    [Z0 + 0.02, d0],
+    [d1, Z1 - 0.02],
+  ]) {
+    leds.add(ledStrip(0.01, 0.006, b - a, X1 - 0.008, k + 0.003, (a + b) / 2))
+    washes.add(ledWash(b - a, 0.42, [X1, k, (a + b) / 2], [0, 0, 1], [0, 1, 0], [-1, 0, 0]))
   }
-  on(3, bake(binders), 0.15, depth / 2 - 0.005)
+  // twin recessed downlights in the soffit; each throws a soft scallop of light down the wall below it
+  const fixtures = G('Downlights')
+  for (const [wall, pos] of L.downlights ?? []) {
+    const side = wall === 'back' ? null : wall === 'left' ? 1 : -1
+    const facing = side ? [side, 0, 0] : [0, 0, 1]
+    const along = side ? [0, 0, 1] : [1, 0, 0]
+    const at0 = side ? V(side > 0 ? X0 : X1, 0, pos) : V(pos, 0, Z0)
+    const c = at0.clone().addScaledVector(V(...facing), 0.24)
+    const fx = G('Downlight')
+    fx.add(M(rbox(0.2, 0.006, 0.1, 0.002).translate(0, -0.003, 0), 'trimWhite'))
+    for (const s of [-1, 1]) fx.add(M(box(0.07, 0.002, 0.07).translate(s * 0.048, -0.0065, 0), 'downlightLens'))
+    fixtures.add(at(fx, c.x, H - drop, c.z, side ? 90 : 0))
+    washes.add(ledWash(wall === 'back' ? 0.8 : 1.0, 1.7, [at0.x, H - drop, at0.z], along, [0, -1, 0], facing, 'scallopWash'))
+  }
+  g.add(bake(fixtures))
+  g.add(bake(leds))
+  g.add(bake(washes))
   return g
 }
 
-/* ── modern desk setup (small room): slab table on steel, ultrawide, keyboard, gamepad… ─────────── */
-/** solid wood slab on black square-tube end frames, a back rail + diagonal brace, a drawer hung on the right */
-function industrialDesk() {
+/** minimal desk: thin white top on a black square-tube frame */
+function minimalDesk() {
   const g = G('Desk')
   const { w, d, top } = L.desk
-  const th = 0.05 // slab thickness
-  const t = 0.04 // square tube
-  const lx = w / 2 - 0.07
-  const lz = d / 2 - 0.05
-  const yb = top - th // underside of the slab
-  g.add(M(box(w, th, d, 1.2).translate(0, top - th / 2, 0), 'slabWood'))
-  for (const sx of [-1, 1]) {
-    for (const sz of [-1, 1]) g.add(M(box(t, yb, t).translate(sx * lx, yb / 2, sz * lz), 'blackSteel'))
-    g.add(M(box(t, t, 2 * lz + t).translate(sx * lx, yb - t / 2, 0), 'blackSteel'))
-    g.add(M(box(t, t, 2 * lz + t).translate(sx * lx, t / 2, 0), 'blackSteel'))
-  }
-  g.add(M(box(2 * lx, t, t).translate(0, yb - t / 2, -lz), 'blackSteel'))
-  // the drawer hangs under the right side; a flat bar runs from it down to the right-hand foot
-  const dw = 0.36
-  const dh = 0.12
-  const dd = 0.5
-  const dx = 0.42
-  const dz = d / 2 - 0.06 - dd / 2
-  const dy = yb - 0.012 - dh / 2
-  g.add(M(box(dw, dh, dd, 0.6).translate(dx, dy, dz), 'slabWood'))
-  g.add(M(box(dw - 0.02, dh - 0.02, 0.012, 0.6).translate(dx, dy, dz + dd / 2 + 0.004), 'slabWood'))
-  g.add(M(new THREE.SphereGeometry(0.009, 12, 8).scale(1, 1, 0.7).translate(dx, dy + 0.01, dz + dd / 2 + 0.014), 'blackSteel'))
-  for (const s of [-1, 1]) g.add(M(box(0.004, 0.03, dd * 0.8).translate(dx + s * (dw / 2 + 0.002), yb - 0.015, dz), 'blackSteel'))
-  g.add(M(beam([dx - dw / 2, dy - dh / 2, -lz], [lx, t, -lz], 0.03, 0.01), 'blackSteel'))
+  const th = 0.025
+  const t = 0.03
+  const lx = w / 2 - 0.04
+  const lz = d / 2 - 0.04
+  const yb = top - th
+  g.add(M(rbox(w, th, d, 0.004).translate(0, top - th / 2, 0), 'deskTop'))
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(M(box(t, yb, t).translate(sx * lx, yb / 2, sz * lz), 'blackSteel'))
+  for (const sz of [-1, 1]) g.add(M(box(2 * lx, 0.04, t).translate(0, yb - 0.02, sz * lz), 'blackSteel'))
+  for (const sx of [-1, 1]) g.add(M(box(t, 0.04, 2 * lz).translate(sx * lx, yb - 0.02, 0), 'blackSteel'))
   return bake(g)
 }
 
@@ -802,53 +867,34 @@ function curve(g, R) {
   return g
 }
 /**
- * 34" curved ultrawide on a black stand with a light bar. The panel shows a wallpaper; the resume window in its
- * centre is `Monitor_Screen` (a flat 4:3 quad the site maps the resume onto). Origin: desk surface, panel front z = 0.
+ * A monitor on a slim stand (flat, or curved with `R`). The panel shows a wallpaper; the resume window in its centre
+ * is `Monitor_Screen` (a flat 4:3 quad the site maps the resume onto). Origin: desk surface, panel front z = 0.
  */
-function ultrawide() {
+function monitor({ w = 0.62, h = 0.35, R = 0, yc = 0.32, wallpaper = 'wallpaperMono' } = {}) {
   const g = G('Monitor')
-  const W = 0.8
-  const Hp = 0.335
-  const R = 1.8
-  const bez = 0.008
-  const yc = 0.3
+  const bez = 0.007
+  const bend = (geo) => (R ? curve(geo, R) : geo)
   const body = G('Monitor_Body')
-  body.add(M(curve(new THREE.BoxGeometry(W + 2 * bez, Hp + 2 * bez, 0.012, 64, 1, 1).translate(0, 0, -0.006), R).translate(0, yc, 0), 'monitorBlack'))
-  body.add(M(curve(rbox(0.36, 0.22, 0.03, 0.01).translate(0, 0, -0.027), R).translate(0, yc - 0.01, 0), 'monitorBlack'))
-  // stand: slim foot, column, bracket into the back of the panel
-  body.add(M(rbox(0.27, 0.012, 0.19, 0.005).translate(0, 0.006, -0.1), 'monitorBlack'))
-  body.add(M(rbox(0.05, 0.33, 0.022, 0.006).translate(0, 0.012 + 0.165, -0.115), 'monitorBlack'))
+  body.add(M(bend(new THREE.BoxGeometry(w + 2 * bez, h + 2 * bez, 0.012, R ? 64 : 1, 1, 1).translate(0, 0, -0.006)).translate(0, yc, 0), 'monitorBlack'))
+  body.add(M(bend(rbox(w * 0.45, h * 0.6, 0.03, 0.01).translate(0, 0, -0.027)).translate(0, yc - 0.01, 0), 'monitorBlack'))
+  body.add(M(rbox(0.25, 0.012, 0.18, 0.005).translate(0, 0.006, -0.1), 'monitorBlack'))
+  body.add(M(rbox(0.045, yc - 0.02, 0.022, 0.006).translate(0, 0.012 + (yc - 0.02) / 2, -0.11), 'monitorBlack'))
   body.add(M(rbox(0.08, 0.07, 0.07, 0.008).translate(0, yc - 0.02, -0.075), 'monitorBlack'))
-  // light bar clipped on the top edge
-  const top = yc + Hp / 2 + bez
-  body.add(M(cyl(0.011, 0.011, 0.44, 20).rotateZ(Math.PI / 2).translate(0, top + 0.016, 0.004), 'monitorBlack'))
-  body.add(M(box(0.05, 0.03, 0.03).translate(0, top + 0.006, -0.01), 'monitorBlack'))
-  body.add(M(box(0.4, 0.003, 0.01).translate(0, top + 0.0055, 0.01), 'lightStrip'))
   g.add(bake(body))
-  const screen = curve(new THREE.PlaneGeometry(W, Hp, 64, 1).translate(0, 0, 0.0008), R).translate(0, yc, 0)
-  g.add(M(screen, 'wallpaper', 'Monitor_Wallpaper'))
-  // the resume window: flat, its corners on the curved glass (the site overlays the resume page here)
-  const sh = Hp * 0.8
+  g.add(M(bend(new THREE.PlaneGeometry(w, h, R ? 64 : 1, 1).translate(0, 0, 0.0008)).translate(0, yc, 0), wallpaper, 'Monitor_Wallpaper'))
+  const sh = h * 0.8
   const sw = (sh * 4) / 3
-  const zEdge = R * (1 - Math.cos(sw / 2 / R)) + 0.0015
+  const zEdge = (R ? R * (1 - Math.cos(sw / 2 / R)) : 0) + 0.0015
   g.add(M(new THREE.PlaneGeometry(sw, sh).translate(0, yc, zEdge), 'screenWindow', 'Monitor_Screen'))
-  // where the lamp light sits (under the light bar) and where it points (onto the keyboard)
-  const bulb = new THREE.Object3D()
-  bulb.name = 'Monitor_Light'
-  bulb.position.set(0, top, 0.02)
-  g.add(bulb)
-  g.userData.bulb = bulb
-  g.userData.bulbAt = [0, 0, 0]
-  g.userData.aim = [0, -top, 0.32]
   return g
 }
 
-/** 75% mechanical keyboard: dark case, dark alphas, tan modifiers */
-function modernKeyboard() {
+/** 75% low-profile keyboard */
+function modernKeyboard(caseMat = 'kbBlack', keyMat = 'keyBlack', accentMat = 'keyBlack') {
   const g = G('Keyboard')
   const parts = G('KbParts')
   const u = 0.019
-  parts.add(M(rbox(16 * u + 0.014, 0.022, 6 * u + 0.014, 0.006).translate(0, 0.011, 0), 'kbCase'))
+  parts.add(M(rbox(16 * u + 0.014, 0.02, 6 * u + 0.014, 0.005).translate(0, 0.01, 0), caseMat))
   const rows = [
     [[1, 't'], ...Array(12).fill([1, 'd']), [1, 't'], [1, 'd'], [1, 'd']],
     [...Array(13).fill([1, 'd']), [2, 't'], [1, 'd']],
@@ -861,70 +907,601 @@ function modernKeyboard() {
     let x = -8 * u
     const z = (r - 2.5) * u
     for (const [wu, c] of row) {
-      parts.add(M(rbox(wu * u - 0.0025, 0.009, u - 0.0025, 0.0022, 2).translate(x + (wu * u) / 2, 0.026 - r * 0.0006, z), c === 't' ? 'keyTan' : 'keyDark'))
+      parts.add(M(rbox(wu * u - 0.0025, 0.007, u - 0.0025, 0.002, 2).translate(x + (wu * u) / 2, 0.023 - r * 0.0004, z), c === 't' ? accentMat : keyMat))
       x += wu * u
     }
   })
   g.add(bake(parts))
-  g.rotation.x = 0.035
+  g.rotation.x = 0.03
   return g
 }
 function modernMouse() {
   const g = G('Mouse')
   g.add(M(new THREE.SphereGeometry(1, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2).scale(0.032, 0.021, 0.058), 'plasticDark'))
-  g.add(M(cyl(0.004, 0.004, 0.006, 12).rotateZ(Math.PI / 2).translate(0, 0.02, -0.022), 'keyDark'))
+  g.add(M(cyl(0.004, 0.004, 0.006, 12).rotateZ(Math.PI / 2).translate(0, 0.02, -0.022), 'kbBlack'))
   return bake(g)
 }
-function deskMat() {
-  return M(rbox(0.86, 0.004, 0.36, 0.002, 1).translate(0, 0.002, 0), 'deskMat', 'Desk_Mat')
-}
-/** a gamepad lying on the desk (grips toward the viewer) */
-function gamepad() {
-  const g = G('Gamepad')
-  for (const s of [-1, 1]) g.add(M(new THREE.SphereGeometry(0.034, 20, 14).scale(1, 0.55, 1.35).translate(s * 0.046, 0.019, 0.014), 'plasticDark'))
-  g.add(M(rbox(0.1, 0.03, 0.062, 0.013).translate(0, 0.02, -0.004), 'plasticDark'))
-  g.add(M(cyl(0.0095, 0.008, 0.012, 16).translate(-0.034, 0.037, -0.008), 'keyDark'))
-  g.add(M(cyl(0.0095, 0.008, 0.012, 16).translate(0.02, 0.037, 0.012), 'keyDark'))
-  for (const [x, z] of [[0.042, -0.019], [0.052, -0.009], [0.032, -0.009], [0.042, 0.001]]) g.add(M(new THREE.SphereGeometry(0.0052, 10, 6).translate(x, 0.036, z), 'keyDark'))
-  g.add(M(box(0.018, 0.004, 0.006).translate(-0.02, 0.035, 0.013), 'keyDark'))
-  g.add(M(box(0.006, 0.004, 0.018).translate(-0.02, 0.035, 0.013), 'keyDark'))
-  g.add(M(new THREE.SphereGeometry(0.006, 10, 6).translate(0, 0.036, -0.02), 'keyTan'))
-  return bake(g)
-}
-function mugWithPen() {
-  const g = G('Mug')
-  g.add(M(lathe([[0, 0], [0.038, 0], [0.041, 0.085], [0.037, 0.085], [0.034, 0.008], [0, 0.008]], 32), 'mugBlack'))
-  g.add(M(new THREE.TorusGeometry(0.022, 0.006, 8, 20, Math.PI).rotateZ(-Math.PI / 2).translate(0.041, 0.045, 0), 'mugBlack'))
-  g.add(M(rod([-0.01, 0.01, 0.004], [-0.045, 0.14, -0.012], 0.004, 8), 'pen'))
-  return bake(g)
-}
-function closedNotebook() {
-  const g = G('Notebook')
-  g.add(M(rbox(0.155, 0.016, 0.215, 0.003).translate(0, 0.008, 0), 'notebookDark'))
-  g.add(M(box(0.146, 0.012, 0.004).translate(0.003, 0.008, 0.106), 'pages'))
-  g.add(M(rod([-0.05, 0.02, -0.07], [0.02, 0.02, 0.07], 0.0045, 10), 'pen'))
-  return bake(g)
-}
-
-/** the modern desk set: ultrawide + light bar, keyboard on a mat, mouse, gamepad, mug, notebook, and the camera
- *  (the photography entry point) */
-function modernDeskSet() {
-  const g = G('Desk_Set')
-  const top = L.desk.top
-  const put = (obj, x, z, ry = 0, dy = 0) => g.add(at(obj, x, top + dy, z, ry))
-  put(ultrawide(), 0, -0.17)
-  put(deskMat(), 0.04, 0.11)
-  put(modernKeyboard(), -0.05, 0.13, 0, 0.006) // on the mat
-  put(modernMouse(), 0.33, 0.15, -8, 0.004)
-  put(gamepad(), 0.24, -0.01, -18, 0.004)
-  put(camera(), 0.62, 0.16, -30)
-  put(mugWithPen(), -0.7, -0.1)
-  put(closedNotebook(), -0.6, 0.15, 8)
-  // cables: monitor → back of desk, keyboard → monitor
-  g.add(M(tube([[0, top + 0.05, -0.29], [0.08, top + 0.004, -0.32], [0.3, top + 0.004, -0.36]], 0.003, 24, 5), 'cableBlack'))
-  g.add(M(tube([[-0.05, top + 0.012, 0.07], [-0.02, top + 0.006, 0.0], [0.0, top + 0.006, -0.14]], 0.0022, 24, 5), 'cableBlack'))
+/** small black PC case standing under the desk, a thin light line down its front */
+function pcCase() {
+  const g = G('PC_Tower')
+  const parts = G('CaseParts')
+  parts.add(M(rbox(0.2, 0.4, 0.42, 0.01).translate(0, 0.2 + 0.015, 0), 'caseBlack'))
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) parts.add(M(cyl(0.012, 0.012, 0.015, 12).translate(sx * 0.07, 0.0075, sz * 0.17), 'rubber'))
+  parts.add(M(box(0.004, 0.3, 0.002).translate(-0.07, 0.22, 0.211), 'ledStrip'))
+  parts.add(M(cyl(0.008, 0.008, 0.004, 16).rotateX(Math.PI / 2).translate(0.06, 0.37, 0.211), 'monitorBlack'))
+  g.add(bake(parts))
   return g
 }
+/** the desk set: monitor, keyboard, mouse, the camera (the photography entry point), the PC under the desk */
+function darkDeskSet() {
+  const g = G('Desk_Set')
+  const top = L.desk.top
+  const put = (obj, x, z, ry = 0) => g.add(at(obj, x, top, z, ry))
+  put(monitor(), 0, -0.12)
+  put(modernKeyboard(), -0.03, 0.14)
+  put(modernMouse(), 0.27, 0.15, -6)
+  put(camera(), 0.53, 0.06, -30)
+  g.add(at(pcCase(), 0.45, 0, -0.08, -4))
+  g.add(M(tube([[0, top + 0.05, -0.23], [0.1, top + 0.004, -0.29], [0.4, top + 0.004, -0.3], [0.45, top - 0.05, -0.31], [0.45, 0.42, -0.28]], 0.0035, 32, 6), 'cableBlack'))
+  return g
+}
+
+/** racing-style gaming chair: black seat and back, white bolsters and wings, harness slots in the headrest (front = -z) */
+function gamingChair() {
+  const g = G('Chair')
+  const base = G('ChairBase')
+  base.add(M(cyl(0.024, 0.028, 0.3, 20).translate(0, 0.27, 0), 'chairBlack'))
+  base.add(M(cyl(0.045, 0.052, 0.06, 20).translate(0, 0.1, 0), 'chairBlack'))
+  for (let k = 0; k < 5; k++) {
+    const a = (k / 5) * Math.PI * 2 + 0.31
+    const tip = [Math.cos(a) * 0.34, 0.075, Math.sin(a) * 0.34]
+    base.add(M(beam([0, 0.1, 0], tip, 0.042, 0.028), 'chairBlack'))
+    base.add(M(cyl(0.008, 0.008, 0.035, 8).translate(tip[0], 0.055, tip[2]), 'chairBlack'))
+    base.add(M(new THREE.SphereGeometry(0.028, 14, 10).scale(0.75, 1, 1).rotateY(-a).translate(tip[0], 0.028, tip[2]), 'rubber'))
+  }
+  base.add(M(rbox(0.28, 0.05, 0.3, 0.015).translate(0, 0.43, 0.02), 'chairBlack'))
+  for (const s of [-1, 1]) {
+    base.add(M(tube([[s * 0.12, 0.44, 0.05], [s * 0.25, 0.45, 0.05], [s * 0.285, 0.5, 0.05]], 0.016, 12, 8), 'chairBlack'))
+    base.add(M(rbox(0.04, 0.2, 0.06, 0.012).translate(s * 0.285, 0.6, 0.05), 'chairBlack'))
+    base.add(M(rbox(0.09, 0.03, 0.26, 0.012).translate(s * 0.29, 0.715, 0.02), 'chairBlack'))
+  }
+  g.add(bake(base))
+  const seat = G('ChairSeat')
+  seat.add(M(rbox(0.38, 0.08, 0.5, 0.03, 4).translate(0, 0.49, 0), 'chairBlack'))
+  for (const s of [-1, 1]) seat.add(at(M(rbox(0.07, 0.1, 0.5, 0.03, 4), 'chairWhite'), s * 0.215, 0.505, 0, 0, 0, s * -8))
+  g.add(bake(seat))
+  // the back, leaning back ~10°: black centre, white wings wrapping forward, a rounded headrest with two slots
+  const back = G('ChairBack')
+  back.add(M(rbox(0.36, 0.86, 0.09, 0.04, 4).translate(0, 0.43, 0), 'chairBlack'))
+  for (const s of [-1, 1]) {
+    back.add(at(M(rbox(0.065, 0.58, 0.11, 0.028, 4), 'chairWhite'), s * 0.205, 0.38, -0.02, s * 18, 0, s * 3))
+    back.add(at(M(rbox(0.07, 0.1, 0.03, 0.012, 2), 'chairWhite'), s * 0.075, 0.72, -0.038))
+    back.add(at(M(rbox(0.045, 0.072, 0.03, 0.01, 2), 'chairHole'), s * 0.075, 0.72, -0.045))
+  }
+  back.add(M(rbox(0.3, 0.16, 0.06, 0.03, 4).translate(0, 0.14, -0.045), 'chairBlack'))
+  back.rotation.x = 0.17
+  back.position.set(0, 0.53, 0.24)
+  g.add(bake(back))
+  return g
+}
+
+/** a wire polyhedron (geometric terrarium) */
+function wireShape(r) {
+  const g = G('Terrarium')
+  const geo = new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(r, 0))
+  const p = geo.attributes.position
+  for (let i = 0; i < p.count; i += 2) g.add(M(rod([p.getX(i), p.getY(i) + r, p.getZ(i)], [p.getX(i + 1), p.getY(i + 1) + r, p.getZ(i + 1)], 0.0018, 4), 'shelfBlack'))
+  return g
+}
+/** a closed book lying flat: dark cover, page block on three sides */
+function blackBook(w, h, d, mat = 'binderBlack') {
+  const g = G('Book')
+  g.add(M(box(w, h, d).translate(0, h / 2, 0), mat))
+  g.add(M(box(w - 0.012, h - 0.008, d - 0.006).translate(0.007, h / 2, 0.004), 'pages'))
+  return g
+}
+/** a row of upright books */
+function uprightBooks(n, seed) {
+  const r = rand(seed)
+  const g = G('Books')
+  let x = 0
+  for (let i = 0; i < n; i++) {
+    const t = 0.024 + r() * 0.016
+    const h = 0.19 + r() * 0.06
+    g.add(M(box(t, h, 0.15 + r() * 0.02).translate(x + t / 2, h / 2, 0), i % 3 === 1 ? 'bookGray' : 'binderBlack'))
+    x += t + 0.002
+  }
+  return g
+}
+
+/**
+ * Two black floating shelves above the desk (from the reference), each with an LED strip underneath washing the wall
+ * below. Origin: the wall face, centred. The lower shelf's LED doubles as the desk light (`Lamp_Light`).
+ */
+function floatingShelves() {
+  const g = G('Floating_Shelves')
+  const { w, depth, ys } = L.floatShelves
+  const th = 0.034
+  const boards = G('Shelf_Boards')
+  for (const y of ys) boards.add(M(box(w, th, depth).translate(0, y - th / 2, depth / 2), 'shelfBlack'))
+  g.add(bake(boards))
+  const leds = G('Shelf_LEDs')
+  for (const y of ys) {
+    leds.add(ledStrip(w - 0.06, 0.005, 0.01, 0, y - th - 0.003, depth - 0.03))
+    leds.add(ledWash(w - 0.04, 0.42, [0, y - th, 0], [1, 0, 0], [0, -1, 0], [0, 0, 1]))
+  }
+  g.add(bake(leds))
+  const on = (k, obj, x, z = depth / 2, ry = 0) => g.add(at(obj, x, ys[k], z, ry))
+  // upper shelf: terrarium, a dark sphere, upright books, a small plant
+  on(1, bake(wireShape(0.075)), -0.33)
+  on(1, M(new THREE.SphereGeometry(0.042, 24, 16).translate(0, 0.042, 0), 'sphereDark', 'Shelf_Sphere'), -0.19)
+  on(1, bake(uprightBooks(5, 961)), -0.06, depth / 2 - 0.01)
+  on(1, bake(potPlant(0.05, 0.08, 12, 962, 'potDark')), 0.34)
+  // lower shelf: books upright, a small stack lying flat, another sphere
+  on(0, bake(uprightBooks(4, 963)), -0.42, depth / 2 - 0.01)
+  const stack = G('Book_Stack')
+  ;[0.03, 0.026, 0.032].reduce((y, h, i) => {
+    stack.add(at(blackBook(0.2 - i * 0.01, h, 0.15, i === 1 ? 'bookGray' : 'binderBlack'), i % 2 ? 0.006 : -0.004, y, 0, i % 2 ? -3 : 2))
+    return y + h
+  }, 0)
+  on(0, bake(stack), -0.08)
+  on(0, bake(uprightBooks(6, 964)), 0.16, depth / 2 - 0.01)
+  on(0, M(new THREE.SphereGeometry(0.035, 24, 16).translate(0, 0.035, 0), 'sphereDark', 'Shelf_Sphere_Small'), 0.42)
+  // the desk light: under the lower shelf, aimed down at the keyboard
+  const bulb = new THREE.Object3D()
+  bulb.name = 'Shelf_Light'
+  bulb.position.set(0, ys[0] - th - 0.01, depth * 0.6)
+  g.add(bulb)
+  g.userData.bulb = bulb
+  g.userData.bulbAt = [0, 0, 0]
+  g.userData.aim = [-0.15, L.desk.top - bulb.position.y, 0.3]
+  return g
+}
+
+/**
+ * A spherical "globe" bookshelf on the wall (after the reference photo): seen from the front it is a circle; shelves are
+ * slices of a shallow half-ellipsoid (deepest in the middle, pointed at the ends) and curved fins bow outward like
+ * meridians. Filled with books, a few lying stacks and two small framed photos. Origin: the circle's centre on the wall
+ * face; x along the wall, y up, z out of the wall.
+ */
+function globeShelf() {
+  const g = G('Globe_Shelf')
+  const { r: R, depth, shelves: n, fins: finX } = L.globeShelf
+  const k = depth / R // the half-ellipsoid's depth per unit radius
+  const th = 0.02
+  const front = (x, y) => k * Math.sqrt(Math.max(0, R * R - x * x - y * y))
+  const ys = Array.from({ length: n }, (_, i) => -R + ((i + 1) * 2 * R) / (n + 1))
+  const wood = G('Globe_Shelf_Wood')
+  // shelves: the plan shape between the wall and the ellipsoid's front arc, ends tapering to points
+  for (const y of ys) {
+    const c = Math.sqrt(R * R - y * y)
+    const pts = [new THREE.Vector2(-c, 0), new THREE.Vector2(c, 0)]
+    for (let i = 1; i < 48; i++) {
+      const x = c - (2 * c * i) / 48
+      pts.push(new THREE.Vector2(x, front(x, y)))
+    }
+    const shelf = new THREE.ExtrudeGeometry(new THREE.Shape(pts), { depth: th, bevelEnabled: false, curveSegments: 1 })
+    wood.add(M(shelf.rotateX(Math.PI / 2).translate(0, y, 0), 'shelfOak'))
+  }
+  // fins: vertical boards square to the wall, bowing outward like meridians, reaching the ellipsoid's front
+  const xFin = (x0, y) => x0 * (0.55 + 0.45 * Math.sqrt(Math.max(0, 1 - (y / R) ** 2)))
+  for (const x0 of finX) {
+    const prof = []
+    const ok = (y) => R * R - xFin(x0, y) ** 2 - y * y > 0.0004
+    const samples = Array.from({ length: 81 }, (_, i) => -R + (2 * R * i) / 80).filter(ok)
+    for (const y of samples) prof.push(new THREE.Vector2(front(xFin(x0, y), y), y))
+    for (const y of [...samples].reverse()) prof.push(new THREE.Vector2(0, y))
+    const fin = new THREE.ExtrudeGeometry(new THREE.Shape(prof), { depth: 0.018, bevelEnabled: false, curveSegments: 1 }).rotateY(-Math.PI / 2)
+    const p = fin.attributes.position
+    for (let i = 0; i < p.count; i++) p.setX(i, p.getX(i) + 0.009 + xFin(x0, p.getY(i)))
+    fin.computeVertexNormals()
+    wood.add(M(fin, 'shelfOak'))
+  }
+  g.add(bake(wood))
+
+  // books: upright rows between the fins, a few stacks lying flat, two framed photos
+  const rnd = rand(971)
+  const books = G('Globe_Shelf_Books')
+  const mats = [...BOOK_COLORS.map((_, i) => `book${i}`), 'bookWhite', 'bookWhite', 'binderBlack']
+  const photos = { 1: ['photo-window-light', 0], 3: ['photo-pines-mist', -0.3] } // shelf → photo, x
+  ys.forEach((y, si) => {
+    const top = y // the shelf's top face
+    const room = (si < n - 1 ? ys[si + 1] - th : y + 0.2) - top - 0.02
+    const xmax = Math.sqrt(Math.max(0, R * R - y * y - (0.13 / k) ** 2)) // where the shelf is deep enough for books
+    const fins = finX.map((x0) => xFin(x0, y))
+    const photo = photos[si]
+    let x = -xmax
+    // the first fin a span [a, b] would run into (with a little clearance), if any
+    const finIn = (a, b) => fins.find((f) => f > a - 0.014 && f < b + 0.014)
+    while (x < xmax - 0.02) {
+      if (photo && Math.abs(x - photo[1]) < 0.075) {
+        // a small framed photo leaning on the back
+        const f = G('Shelf_Photo')
+        f.add(M(box(0.12, 0.15, 0.012).translate(0, 0.075, 0), 'frameBlack'))
+        f.add(M(box(0.1, 0.13, 0.002).translate(0, 0.076, 0.007), 'mat'))
+        f.add(M(new THREE.PlaneGeometry(0.075, 0.1).translate(0, 0.078, 0.0085), photo[0]))
+        f.rotation.x = -0.12
+        books.add(at(G('Photo', f), photo[1], top, 0.06))
+        x = photo[1] + 0.08
+        continue
+      }
+      const roll = rnd()
+      const dmax = Math.min(0.2, front(x, y) - 0.015)
+      if (roll < 0.08) {
+        x += 0.03 + rnd() * 0.05 // a gap
+        continue
+      }
+      if (roll < 0.15 && dmax > 0.14) {
+        // a short stack lying flat
+        let sy = top
+        const w = 0.14 + rnd() * 0.04
+        const f = finIn(x, x + w)
+        if (f !== undefined || x + w > xmax) {
+          x = f !== undefined ? f + 0.024 : xmax
+          continue
+        }
+        for (let j = 0; j < 2 + Math.floor(rnd() * 3); j++) {
+          const h = 0.022 + rnd() * 0.014
+          books.add(M(box(w, h, Math.min(dmax, 0.13 + rnd() * 0.03)).translate(x + w / 2, sy + h / 2, 0.075), mats[Math.floor(rnd() * mats.length)]))
+          sy += h
+        }
+        x += w + 0.01
+        continue
+      }
+      const t = 0.018 + rnd() * 0.03
+      const f = finIn(x, x + t)
+      if (f !== undefined) {
+        x = f + 0.024
+        continue
+      }
+      const h = Math.min(room, 0.12 + rnd() * 0.07)
+      const d = Math.max(0.1, Math.min(dmax, 0.12 + rnd() * 0.06))
+      const mat = mats[Math.floor(rnd() * mats.length)]
+      books.add(M(box(t, h, d).translate(x + t / 2, top + h / 2, d / 2 + 0.006), mat))
+      if (rnd() < 0.35) books.add(M(box(t * 0.82, 0.012, 0.002).translate(x + t / 2, top + h * (0.62 + rnd() * 0.2), d + 0.007), rnd() < 0.5 ? 'pages' : 'brass'))
+      x += t + 0.0015
+    }
+  })
+  g.add(bake(books))
+  return g
+}
+
+/** smooth, low-frequency lumps (for soft furnishings) */
+const lumps = (x, y, z) => 0.5 * Math.sin(3.1 * x + 1.3) * Math.sin(2.7 * y + 0.4) * Math.sin(3.3 * z + 2.1) + 0.3 * Math.sin(5.3 * x + 0.7) * Math.sin(4.9 * z + 1.9) + 0.2 * Math.sin(7.1 * y + 2.3) * Math.sin(6.3 * x + 0.2)
+/**
+ * Push vertices outward from the shape's centre by lumps × amp (a slouchy, hand-filled look). The push depends on the
+ * position only, so vertices duplicated along seams move together (no cracks).
+ */
+function slouch(geo, amp, normals = true) {
+  geo.computeBoundingBox()
+  const c = geo.boundingBox.getCenter(new THREE.Vector3())
+  const p = geo.attributes.position
+  const d = new THREE.Vector3()
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i)
+    const y = p.getY(i)
+    const z = p.getZ(i)
+    d.set(x - c.x, (y - c.y) * 0.5, z - c.z).normalize()
+    const k = amp * lumps(x, y, z)
+    p.setXYZ(i, x + d.x * k, y + d.y * k, z + d.z * k)
+  }
+  if (normals) geo.computeVertexNormals()
+  return geo
+}
+
+/**
+ * Bean-bag loveseat in charcoal wide-wale corduroy (after the reference photo): a deep, sagging seat, a fat rolled back
+ * that wraps round into the arms (the wales run over the roll), and a throw pillow leaning on the back. Front = -z.
+ */
+function beanSofa() {
+  const g = G('Sofa')
+  const parts = G('Sofa_Parts')
+  // seat: a soft rounded block, dished in the middle; UVs in metres so the wales keep their width
+  const seat = rbox(1.42, 0.4, 0.92, 0.17, 6).translate(0, 0.2, -0.02)
+  const sp = seat.attributes.position
+  for (let i = 0; i < sp.count; i++) {
+    if (sp.getY(i) < 0.3) continue
+    const u = sp.getX(i) / 0.71
+    const w = (sp.getZ(i) + 0.02) / 0.46
+    sp.setY(i, sp.getY(i) - 0.07 * Math.max(0, 1 - u * u) * Math.max(0, 1 - w * w))
+  }
+  seat.attributes.uv.array.forEach((v, i, a) => (a[i] = v * (i % 2 ? 0.92 : 1.42)))
+  parts.add(M(slouch(seat, 0.018, false), 'corduroy'))
+  // the roll: back + arms swept round a squarish half-loop, fatter and taller at the back, rounded off at the arm ends
+  const NS = 90
+  const NR = 24
+  const pos = []
+  const uv = []
+  const idx = []
+  const path = (t) => {
+    const f = t * 4.54 - 2.27 // −130° … 130° (0 = the middle of the back)
+    const s = Math.sin(f)
+    const c = Math.cos(f)
+    return V(0.62 * Math.sign(s) * Math.abs(s) ** 0.5, 0.44 + 0.1 * c * c, 0.33 * Math.sign(c) * Math.abs(c) ** 0.6)
+  }
+  let len = 0
+  let prev = path(0)
+  for (let i = 0; i <= NS; i++) {
+    const t = i / NS
+    const c = path(t)
+    len += c.distanceTo(prev)
+    prev = c
+    const tan = path(Math.min(1, t + 0.002)).sub(path(Math.max(0, t - 0.002))).normalize()
+    const side = new THREE.Vector3(0, 1, 0).cross(tan).normalize() // horizontal, across the roll
+    const back = Math.cos((t * 4.54 - 2.27) / 1.3) ** 2
+    const end = Math.min(1, Math.min(t, 1 - t) / 0.07)
+    const r = (0.17 + 0.07 * back) * Math.sqrt(Math.max(0, 1 - (1 - end) ** 2)) // closes to a point at the arm ends
+    const tall = 1 + 0.3 * back
+    for (let j = 0; j <= NR; j++) {
+      const a = (j / NR) * Math.PI * 2
+      const q = c
+        .clone()
+        .addScaledVector(side, Math.cos(a) * r)
+        .add(V(0, Math.sin(a) * r * tall, 0))
+      pos.push(q.x, q.y, q.z)
+      uv.push(len, j / NR)
+    }
+  }
+  for (let i = 0; i < NS; i++)
+    for (let j = 0; j < NR; j++) {
+      const a = i * (NR + 1) + j
+      const b = a + NR + 1
+      idx.push(a, a + 1, b, b, a + 1, b + 1)
+    }
+  const roll = new THREE.BufferGeometry()
+  roll.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
+  roll.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2))
+  roll.setIndex(idx)
+  parts.add(M(slouch(roll, 0.02), 'corduroy'))
+  // throw pillow: a puffy square, corners pinched, leaning back against the roll
+  const pillow = new THREE.BoxGeometry(0.5, 0.46, 0.16, 12, 12, 4)
+  const pp = pillow.attributes.position
+  for (let i = 0; i < pp.count; i++) {
+    const u = pp.getX(i) / 0.25
+    const v = pp.getY(i) / 0.23
+    const puff = Math.max(0, 1 - 0.55 * (u ** 4 + v ** 4))
+    pp.setZ(i, pp.getZ(i) * puff)
+    pp.setX(i, pp.getX(i) * (1 - 0.05 * v * v))
+  }
+  pillow.computeVertexNormals()
+  parts.add(at(M(slouch(pillow, 0.008), 'corduroy'), 0.18, 0.6, 0.0, -12, 20, 4))
+  g.add(bake(parts))
+  return g
+}
+
+/**
+ * French balcony doors (after the reference photo) in the left wall: two glazed doors with a 2 × 5 grid between fixed
+ * sidelights (raised panels below, 4 lights above), white painted frames and casing, brass levers and hinges. The one
+ * glass plane is `Window_1_Glass` (the site's window light and the moon come through it). Origin: the wall's inner
+ * face at the opening's centre; u runs along the wall (world z), d into the room (world x).
+ */
+function balconyDoor() {
+  const { w, h } = P.balcony
+  const g = G('Balcony_Door')
+  const fr = G('Balcony_Frames')
+  const piece = (u0, u1, y0, y1, d0, d1, mat = 'frameWhite') => fr.add(M(box(d1 - d0, y1 - y0, u1 - u0).translate((d0 + d1) / 2, (y0 + y1) / 2, (u0 + u1) / 2), mat))
+  const hw = w / 2
+  // reveal lining, casing (architrave) with a small cap, stone threshold
+  piece(-hw, -hw + 0.02, 0, h, -T, 0)
+  piece(hw - 0.02, hw, 0, h, -T, 0)
+  piece(-hw, hw, h - 0.02, h, -T, 0)
+  piece(-hw - 0.09, -hw, 0, h + 0.09, 0, 0.02)
+  piece(hw, hw + 0.09, 0, h + 0.09, 0, 0.02)
+  piece(-hw - 0.09, hw + 0.09, h, h + 0.09, 0, 0.02)
+  piece(-hw - 0.11, hw + 0.11, h + 0.09, h + 0.115, -0.005, 0.035)
+  piece(-hw, hw, 0, 0.02, -T, 0.02, 'sill')
+  // the unit: outer frame, mullions between the leaves
+  const d0 = -0.1
+  const d1 = -0.03
+  const f = 0.05
+  piece(-hw + 0.02, hw - 0.02, h - 0.02 - f, h - 0.02, d0, d1)
+  piece(-hw + 0.02, hw - 0.02, 0.02, 0.02 + 0.03, d0, d1)
+  const cuts = [-hw + 0.02, -hw + 0.32, -0.003, 0.003, hw - 0.32, hw - 0.02]
+  const leaves = [
+    [cuts[0], cuts[1], 'side'],
+    [cuts[1], cuts[2], 'door'],
+    [cuts[3], cuts[4], 'door'],
+    [cuts[4], cuts[5], 'side'],
+  ]
+  const yTop = h - 0.02 - f
+  const yBot = 0.05
+  for (const [a, b, kind] of leaves) {
+    const s = 0.055 // stiles
+    piece(a, a + s, yBot, yTop, d0 + 0.01, d1)
+    piece(b - s, b, yBot, yTop, d0 + 0.01, d1)
+    piece(a, b, yTop - 0.06, yTop, d0 + 0.01, d1)
+    const glassBot = kind === 'door' ? yBot + 0.17 : 0.66
+    piece(a, b, glassBot - (kind === 'door' ? 0.17 : 0.07), glassBot, d0 + 0.01, d1)
+    if (kind === 'side') {
+      // raised panel below the glass
+      piece(a + s, b - s, yBot, glassBot - 0.07, d0 + 0.03, d1 - 0.012)
+      piece(a + s + 0.035, b - s - 0.035, yBot + 0.06, glassBot - 0.13, d1 - 0.012, d1 - 0.004)
+    }
+    // glazing bars
+    const ga = a + s
+    const gb = b - s
+    const gy0 = glassBot
+    const gy1 = yTop - 0.06
+    const rows = kind === 'door' ? 5 : 4
+    for (let r = 1; r < rows; r++) {
+      const y = gy0 + ((gy1 - gy0) * r) / rows
+      piece(ga, gb, y - 0.011, y + 0.011, d0 + 0.025, d1 - 0.005)
+    }
+    if (kind === 'door') piece((ga + gb) / 2 - 0.011, (ga + gb) / 2 + 0.011, gy0, gy1, d0 + 0.025, d1 - 0.005)
+  }
+  // brass: levers on the meeting stiles, hinges on the doors' outer stiles
+  for (const s of [-1, 1]) {
+    const u = s * 0.035
+    fr.add(M(cyl(0.022, 0.022, 0.008, 20).rotateZ(Math.PI / 2).translate(d1 + 0.004, 1.05, u), 'brass'))
+    fr.add(M(box(0.02, 0.018, 0.12).translate(d1 + 0.03, 1.05, u + s * 0.055), 'brass'))
+    fr.add(M(cyl(0.008, 0.008, 0.03, 12).rotateZ(Math.PI / 2).translate(d1 + 0.016, 1.05, u), 'brass'))
+    for (const y of [0.3, 1.2, 2.05]) fr.add(M(cyl(0.008, 0.008, 0.09, 12).translate(d1 + 0.004, y, s * (hw - 0.32) - s * 0.002), 'brass'))
+  }
+  const baked = bake(fr)
+  const glass = M(new THREE.PlaneGeometry(w - 0.06, h - 0.08).rotateY(Math.PI / 2).translate(-0.065, h / 2, 0), 'glass', 'Window_1_Glass')
+  glass.userData.keep = true
+  baked.add(glass)
+  g.add(baked)
+  return g
+}
+
+/** the balcony outside: stone floor, a white balustrade with vase balusters and pedestals, potted cypress and shrubs */
+function balconyTerrace() {
+  const g = G('Balcony')
+  const parts = G('Balcony_Parts')
+  const xo = X0 - T // the wall's outer face
+  const depth = 1.7
+  const xf = xo - depth + 0.09 // the balustrade line
+  const z0 = P.balcony.z - 1.45
+  const z1 = P.balcony.z + 1.45
+  parts.add(M(box(depth, 0.14, z1 - z0 + 0.2, 1.2).translate(xo - depth / 2, -0.08, (z0 + z1) / 2), 'stone'))
+  const baluster = lathe([[0, 0], [0.045, 0], [0.045, 0.06], [0.03, 0.09], [0.026, 0.2], [0.045, 0.38], [0.04, 0.5], [0.022, 0.62], [0.03, 0.68], [0.04, 0.7], [0, 0.7]], 16)
+  const run = (a, b, along) => {
+    // a straight run of balustrade from a to b (points on the floor), rails + balusters
+    const A = V(...a)
+    const B = V(...b)
+    const len = A.distanceTo(B)
+    const mid = A.clone().add(B).multiplyScalar(0.5)
+    const rail = (y, hgt, wid) => {
+      const geo = along === 'z' ? box(wid, hgt, len) : box(len, hgt, wid)
+      parts.add(M(geo.translate(mid.x, y, mid.z), 'stoneWhite'))
+    }
+    rail(0.05, 0.1, 0.16)
+    rail(0.86, 0.08, 0.17)
+    rail(0.91, 0.04, 0.2)
+    const n = Math.floor(len / 0.15)
+    for (let i = 0; i < n; i++) {
+      const p = A.clone().lerp(B, (i + 0.5) / n)
+      parts.add(M(baluster.clone().translate(p.x, 0.1, p.z), 'stoneWhite'))
+    }
+  }
+  run([xf, 0, z0], [xf, 0, z1], 'z')
+  run([xo, 0, z0], [xf, 0, z0], 'x')
+  run([xo, 0, z1], [xf, 0, z1], 'x')
+  for (const [x, z] of [
+    [xf, z0],
+    [xf, z1],
+    [xf, (z0 + z1) / 2],
+  ])
+    parts.add(M(box(0.2, 0.98, 0.2).translate(x, 0.49, z), 'stoneWhite'))
+  // potted cypress at the outer corners, shrubs either side of the doors
+  const pot = (x, z, r, h) => parts.add(M(lathe([[0, 0], [r * 0.8, 0], [r, h], [r * 1.08, h + 0.02], [r * 0.95, h + 0.02], [0, h - 0.02]], 28).translate(x, 0, z), 'terracotta'))
+  for (const z of [z0 + 0.35, z1 - 0.35]) {
+    pot(xf + 0.35, z, 0.19, 0.42)
+    parts.add(M(new THREE.SphereGeometry(1, 24, 18).scale(0.26, 0.95, 0.26).translate(xf + 0.35, 1.32, z), 'cypress'))
+    parts.add(M(new THREE.SphereGeometry(1, 20, 14).scale(0.16, 0.5, 0.16).translate(xf + 0.35, 2.15, z), 'cypress'))
+  }
+  for (const z of [P.balcony.z - P.balcony.w / 2 - 0.35, P.balcony.z + P.balcony.w / 2 + 0.35]) {
+    pot(xo - 0.32, z, 0.17, 0.36)
+    parts.add(M(new THREE.SphereGeometry(0.27, 20, 14).scale(1, 0.85, 1).translate(xo - 0.32, 0.6, z), 'shrub'))
+  }
+  g.add(bake(parts))
+  return g
+}
+
+/** sheer white voile either side of the balcony doors, gathered with a cord tieback, pooling a little on the floor */
+function sheerCurtains() {
+  const g = G('Sheer_Curtains')
+  const parts = G('Sheer_Parts')
+  const top = H - 0.15 - 0.012
+  const x = X0 + 0.13
+  const tieY = 1.05
+  for (const { outer, inner } of L.sheers) {
+    const W = Math.abs(inner - outer)
+    const s = Math.sign(inner - outer)
+    const folds = Math.round(W / 0.085)
+    const geo = new THREE.PlaneGeometry(1, 1, folds * 8, 60)
+    const p = geo.attributes.position
+    for (let i = 0; i < p.count; i++) {
+      const u = p.getX(i) + 0.5 // 0 at the gathered (outer) edge → 1 at the free edge
+      const v = p.getY(i) + 0.5
+      const y = v * top
+      const t = y > tieY ? ((y - tieY) / (top - tieY)) ** 0.75 : ((tieY - y) / tieY) ** 1.3
+      const width = y > tieY ? 0.14 + (W - 0.14) * t : 0.14 + (W * 0.8 - 0.14) * t
+      const gather = W / width
+      const depth = (0.012 + 0.006 * Math.min(4, gather)) * Math.sin(u * folds * Math.PI * 2)
+      const pool = y < 0.04 ? (0.04 - y) * 1.2 : 0
+      p.setXYZ(i, x + depth + pool, Math.max(0.004, y), outer + s * u * width)
+    }
+    geo.computeVertexNormals()
+    parts.add(M(geo, 'sheer'))
+    // tieback cord round the gathered fabric, and a brass holdback on the wall behind it
+    parts.add(M(new THREE.TorusGeometry(0.07, 0.006, 6, 28).rotateX(Math.PI / 2).scale(0.75, 1, 1.15).translate(x, tieY, outer + s * 0.07), 'rope'))
+    parts.add(M(cyl(0.022, 0.022, 0.012, 20).rotateZ(Math.PI / 2).translate(X0 + 0.006, tieY + 0.02, outer + s * 0.03), 'brass'))
+  }
+  const z0 = Math.min(...L.sheers.flatMap((c) => [c.outer, c.inner])) - 0.02
+  const z1 = Math.max(...L.sheers.flatMap((c) => [c.outer, c.inner])) + 0.02
+  parts.add(M(box(0.025, 0.015, z1 - z0).translate(x, top + 0.006, (z0 + z1) / 2), 'trimWhite'))
+  g.add(bake(parts))
+  return g
+}
+
+
+/**
+ * Cluster pendant (after the reference photo): five woven rattan balls on jute ropes at staggered heights from one
+ * black canopy, a warm Edison bulb in each, trailing pothos winding round three of them and down a rope. The room's
+ * main light (`Room_Fill`) glows inside the cluster. Origin: the canopy, on the soffit's underside.
+ */
+function clusterPendant() {
+  const g = G('Cluster_Pendant')
+  const r = rand(981)
+  const top = 0
+  // ball centres relative to the canopy: x, height above the floor, z, radius
+  const balls = [
+    [0.08, 2.3, -0.08, 0.115],
+    [-0.1, 2.02, 0.07, 0.12],
+    [0.12, 1.8, 0.1, 0.11],
+    [-0.08, 1.6, -0.1, 0.12],
+    [0.05, 1.37, 0.03, 0.115],
+  ].map(([x, y, z, rad]) => [x, y - (H - 0.15), z, rad])
+  const hw = G('Cluster_Hardware')
+  hw.add(M(cyl(0.11, 0.11, 0.022, 32).translate(0, top - 0.011, 0), 'blackSteel'))
+  const wicker = G('Cluster_Balls')
+  const bulbs = G('Cluster_Bulbs')
+  for (const [x, y, z, rad] of balls) {
+    // rope from the canopy to the top of the ball, with a gentle sag outward
+    hw.add(M(tube([[x * 0.3, top - 0.02, z * 0.3], [x * 0.85, (top + y + rad) / 2, z * 0.85], [x, y + rad, z]], 0.007, 24, 6), 'rope'))
+    const ball = new THREE.SphereGeometry(rad, 36, 24).translate(x, y, z)
+    ball.attributes.uv.array.forEach((v, i, a) => (a[i] = i % 2 ? v : v * 2))
+    wicker.add(M(ball, 'wicker'))
+    hw.add(M(cyl(0.014, 0.014, 0.04, 12).translate(x, y + rad - 0.03, z), 'blackSteel'))
+    bulbs.add(M(new THREE.SphereGeometry(0.028, 16, 12).scale(1, 1.25, 1).translate(x, y - 0.005, z), 'edisonBulb'))
+  }
+  g.add(bake(hw))
+  g.add(bake(wicker))
+  g.add(bake(bulbs))
+  // trailing pothos: round three of the balls and draping below, and one climbing down a rope
+  const vines = G('Cluster_Vines')
+  const vine = (pts, spacing = 0.026) => {
+    vines.add(M(tube(pts, 0.0022, 40, 4), 'stem'))
+    const curve = new THREE.CatmullRomCurve3(pts.map((q) => V(...q)))
+    const n = Math.round(curve.getLength() / spacing)
+    for (let k = 1; k <= n; k++) {
+      const lf = leaf('pothos', 0.06 + r() * 0.04, r() * 360, -25 + r() * 60, (r() - 0.5) * 60, 0.06, 0.04)
+      lf.position.copy(curve.getPoint(k / (n + 0.5)))
+      vines.add(lf)
+    }
+  }
+  for (const i of [0, 2, 3]) {
+    const [x, y, z, rad] = balls[i]
+    const a0 = r() * Math.PI * 2
+    const pts = []
+    for (let k = 0; k <= 6; k++) {
+      const a = a0 + k * 0.7
+      const h = y + rad * (0.9 - k * 0.3)
+      const rr = rad * 1.08 * Math.sqrt(Math.max(0.1, 1 - ((h - y) / (rad * 1.1)) ** 2))
+      pts.push([x + Math.cos(a) * rr, h, z + Math.sin(a) * rr])
+    }
+    const last = pts[pts.length - 1]
+    pts.push([last[0] * 1.05, last[1] - 0.18, last[2] * 1.05], [last[0] * 1.08, last[1] - 0.38 - r() * 0.15, last[2] * 1.08])
+    vine(pts)
+  }
+  const [x1, y1, z1, r1] = balls[1]
+  vine([[x1 * 0.4, top - 0.05, z1 * 0.4 + 0.012], [x1 * 0.75, (top + y1) / 2, z1 * 0.75 + 0.012], [x1 + 0.01, y1 + r1 + 0.02, z1 + 0.012]])
+  g.add(bake(vines))
+  return g
+}
+
 
 /* ── the desk set ─────────────────────────────────────────────────────────────────────────── */
 function crtMonitor() {
@@ -1245,12 +1822,12 @@ function lights(bulbWorld, aim) {
   sun.position.set(...L.sun.pos)
   sun.lookAt(...L.sun.look)
   g.add(sun)
-  const spot = new THREE.SpotLight(0xffc98a, 6, 4, 0.8, 0.55, 2)
+  const spot = new THREE.SpotLight(L.lamp?.color ?? 0xffc98a, 6, 4, 0.8, 0.55, 2)
   spot.name = 'Lamp_Light'
   spot.position.copy(bulbWorld)
   spot.lookAt(aim)
   g.add(spot)
-  const fill = new THREE.PointLight(0xffe8cc, L.fill.intensity, 16, 2)
+  const fill = new THREE.PointLight(L.fill.color ?? 0xffe8cc, L.fill.intensity, 16, 2)
   fill.name = 'Room_Fill'
   fill.position.set(...L.fill.pos)
   g.add(fill)
@@ -1277,30 +1854,38 @@ async function main() {
   const textures = await buildTextures(ROOT)
 
   const root = G('Room')
-  root.userData.extras = { units: 'meters', upAxis: 'Y', size: { width: W, depth: D, height: H }, generator: 'scripts/room-model/build-room-model.mjs' }
+  root.userData.extras = { units: 'meters', upAxis: 'Y', size: { width: W, depth: D, height: H }, generator: 'scripts/room-model/build-room-model.mjs', ...(P.theme ? { theme: P.theme } : {}) }
   root.add(architecture())
+  if (P.theme === 'night') root.add(fitout())
   root.add(G('Windows', ...WINDOWS.map(windowUnit)))
   root.add(outside())
+  if (P.balcony) root.add(at(balconyDoor(), X0, 0, P.balcony.z), balconyTerrace())
   root.add(door())
 
   const furniture = G('Furniture')
-  furniture.add(at(L.desk.table === 'steel' ? industrialDesk() : desk(), L.desk.x, 0, L.desk.z))
-  const set = L.desk.set === 'modern' ? modernDeskSet() : deskSet()
+  furniture.add(at(L.desk.table === 'minimal' ? minimalDesk() : desk(), L.desk.x, 0, L.desk.z))
+  const set = L.desk.set === 'dark' ? darkDeskSet() : deskSet()
   furniture.add(at(set, L.desk.x, 0, L.desk.z))
-  furniture.add(at(chair(), L.chair[0], 0, L.chair[1], L.chair[2]))
+  furniture.add(at(L.chairStyle === 'gaming' ? gamingChair() : chair(), L.chair[0], 0, L.chair[1], L.chair[2]))
   if (L.rug) furniture.add(at(rug(), L.rug.x, 0, L.rug.z))
-  furniture.add(at(shelf(), L.shelf.x, 0, L.shelf.z, 90))
+  if (L.shelf) furniture.add(at(shelf(), L.shelf.x, 0, L.shelf.z, 90))
   if (L.bench) furniture.add(at(bench(), L.bench.x, 0, L.bench.z, 90))
-  if (L.shelves) furniture.add(at(wallShelves(), L.shelves.x, 0, Z0 + 0.001))
+  if (L.floatShelves) furniture.add(at(floatingShelves(), L.floatShelves.x, 0, Z0 + 0.001))
+  if (L.sofa) furniture.add(at(beanSofa(), L.sofa.x, 0, L.sofa.z, L.sofa.ry ?? 0))
+  if (L.globeShelf) furniture.add(at(globeShelf(), X0 + 0.001, L.globeShelf.y, L.globeShelf.z, 90))
   root.add(furniture)
 
   if (L.plants.length) root.add(G('Plants', ...L.plants.map(([seed, scale, count, x, z]) => at(monstera(seed, scale, count), x, 0, z))))
   root.add(wallDecor())
-  root.add(ceilingFan())
+  if (L.fan) root.add(ceilingFan())
+  if (L.sheers) root.add(sheerCurtains())
+  if (L.cluster) root.add(at(clusterPendant(), L.cluster.x, H - 0.15, L.cluster.z))
 
   root.updateMatrixWorld(true)
   const bulb = new THREE.Vector3()
-  const lampObj = set.children.find((c) => c.userData.bulb)
+  // the desk light: whichever object carries a light marker (the desk lamp, or the shelf LED in the dark room)
+  let lampObj = null
+  root.traverse((o) => (lampObj ??= o.userData.bulb ? o : null))
   lampObj.userData.bulb.localToWorld(bulb.set(...(lampObj.userData.bulbAt ?? [0, 0.055, 0])))
   const aim = lampObj.userData.aim ? lampObj.userData.bulb.localToWorld(V(...lampObj.userData.aim)) : V(bulb.x + 0.15, 0.75, bulb.z + 0.1)
   root.add(lights(bulb, aim))
