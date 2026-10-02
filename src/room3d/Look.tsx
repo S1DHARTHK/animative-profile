@@ -1,5 +1,6 @@
-// The photographic look of the room: golden-hour sun, warm bounce light, sunbeams through the window, soft contact
-// shadows (ambient occlusion), a gentle bloom and a warm film grade. Everything is derived from the model's own
+// The photographic look of the room — golden hour (sun through the window grid, a volumetric sunbeam, warm bounce and
+// grade) or night (moonlight, the pendant, LED lines, a cool grade) — with soft contact shadows (ambient occlusion)
+// and bloom. Everything is derived from the model's own
 // lights and window (no invented positions) and nothing here changes the model file.
 import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
@@ -9,11 +10,12 @@ import { BlendFunction, BloomEffect, Effect, EffectComposer, EffectPass, Pass, R
 import { N8AOPostPass } from 'n8ao'
 import type { RoomHandle } from './RoomScene'
 import { isFrozen } from './store'
+import { modelTheme } from './roomGeometry'
 
-/* â”€â”€ tuning â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-// dev switches for isolating an effect: ?off=ao,rays,area,bloom,smaa,grade,hemi
+/* ── tuning ─────────────────────────────────────────────────────────────────────────────── */
+// dev switches for isolating an effect: ?off=ao,rays,area,bloom,smaa,grade,hemi,led,sun,fill,lamp,shadow-Room_Fill,shadow-Lamp_Light
 const OFF = new Set((import.meta.env.DEV ? new URLSearchParams(location.search).get('off') ?? '' : '').split(','))
-// dev: ?gpu measures the GPU time of each rendered frame â†’ window.__gpuMs() (median of the last 120 frames)
+// dev: ?gpu measures the GPU time of each rendered frame → window.__gpuMs() (median of the last 120 frames)
 const gpuTimer = import.meta.env.DEV && new URLSearchParams(location.search).has('gpu') ? makeGpuTimer() : null
 function makeGpuTimer() {
   let gl: WebGL2RenderingContext | null = null
@@ -44,24 +46,65 @@ function makeGpuTimer() {
     },
   }
 }
-const SUN = { boost: 2.4, color: '#ff9f45' } // strong, saturated golden-hour patches
-const WINDOW_GLOW = { color: '#ffd9a0', intensity: 5.2 } // soft daylight pouring in through each window
-const BOUNCE = { sky: '#ffd7aa', ground: '#6a4b38', intensity: 0.62 } // warm fill: shadows stay warm and high-key, like the photos
-const FILL_SCALE = 0.45 // the model's room fill, toned down
-const LAMP_SCALE = 0.3 // desk lamp: a warm pool, not a blow-out
-const GARDEN = { glow: 2.8, tint: '#ffe39c' } // sunlit, yellow-green foliage outside the window
-const ENV_INTENSITY = 0.07 // neutral reflections kept low
-// sunlight scattered by the air in the room (see SunRaysPass): colour Ã— strength, forward-scattering, dust texture
+/**
+ * Two looks, picked by the model itself (`theme` in the Room node's extras): golden hour — the photographed room, a low
+ * sun through the window grid — and night — the modern room after dark: warm LED lines, downlights and a cluster of
+ * rattan pendants on light greige walls, a faint moon outside.
+ */
+interface LookTheme {
+  sun: { boost: number; color: string } // the model's Sun, scaled and tinted
+  windowGlow: { color: string; intensity: number } // soft light through each window opening
+  bounce: { sky: string; ground: string; intensity: number }
+  fill: number // the model's Room_Fill (the pendant, at night), scaled
+  lamp: number // the model's Lamp_Light (desk lamp / shelf LED), scaled
+  garden: { glow: number; tint: string } // what's seen through the window
+  env: number // reflections of the neutral environment
+  rays: boolean // volumetric sunbeam
+  led: number // LED light washes (drawn additively)
+  ao: { radius: number; falloff: number; intensity: number; color: string }
+  bloom: { intensity: number; threshold: number; smoothing: number; radius: number }
+  grade: { warmth: number; contrast: number; vignette: number } // warmth < 0 cools the image
+}
+const GOLDEN: LookTheme = {
+  sun: { boost: 2.4, color: '#ff9f45' }, // strong, saturated golden-hour patches
+  windowGlow: { color: '#ffd9a0', intensity: 5.2 },
+  bounce: { sky: '#ffd7aa', ground: '#6a4b38', intensity: 0.62 }, // shadows stay warm and high-key, like the photos
+  fill: 0.45,
+  lamp: 0.3, // a warm pool, not a blow-out
+  garden: { glow: 2.8, tint: '#ffe39c' }, // sunlit, yellow-green foliage
+  env: 0.07,
+  rays: true,
+  led: 1,
+  ao: { radius: 0.55, falloff: 0.9, intensity: 2.4, color: '#2a190d' },
+  bloom: { intensity: 0.42, threshold: 0.72, smoothing: 0.25, radius: 0.72 },
+  grade: { warmth: 1, contrast: 0.24, vignette: 0.38 },
+}
+const NIGHT: LookTheme = {
+  sun: { boost: 0.35, color: '#9fb4ff' }, // a faint, cool moon through the window
+  windowGlow: { color: '#7d93c4', intensity: 0.4 },
+  bounce: { sky: '#f0e2cf', ground: '#a59886', intensity: 0.26 }, // warm light bouncing off the greige walls (up too)
+  fill: 1, // the rattan cluster's amber glow (and the wicker's shadows on the walls)
+  lamp: 0.7, // the LED under the shelf lights the desk
+  garden: { glow: 0.6, tint: '#2b3a5c' }, // dark night foliage
+  env: 0.1,
+  rays: false,
+  led: 0.85, // LED lines and downlight scallops — a little dim
+  ao: { radius: 0.55, falloff: 0.9, intensity: 2.3, color: '#2b231a' },
+  bloom: { intensity: 0.8, threshold: 0.66, smoothing: 0.3, radius: 0.8 },
+  grade: { warmth: 0.25, contrast: 0.22, vignette: 0.42 },
+}
+export const themeOf = (room: RoomHandle) => (modelTheme(room.scene) === 'night' ? 'night' : 'golden')
+const lookOf = (room: RoomHandle) => (themeOf(room) === 'night' ? NIGHT : GOLDEN)
+// sunlight scattered by the air in the room (see SunRaysPass): colour × strength, forward-scattering, dust texture
 const RAYS = { color: '#ffc584', strength: 0.085, anisotropy: 0.3, dust: 0.8, steps: 20, scale: 0.5 }
-const AO = { radius: 0.55, falloff: 0.9, intensity: 2.4, color: '#2a190d', quality: 'Performance' as const }
-const BLOOM = { intensity: 0.42, threshold: 0.72, smoothing: 0.25, radius: 0.72 }
-const GRADE = { warmth: 1, contrast: 0.24, vignette: 0.38 }
+const AO_QUALITY = 'Performance' as const // soft contact shading at half-res — the cheapest preset is plenty
 
-/* â”€â”€ lights: tune the model's own lights for the golden-hour look + add warm bounce â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── lights: tune the model's own lights for the theme + add bounce light ─────────────────── */
 export function WarmLights({ room }: { room: RoomHandle }) {
   const scene = useThree((s) => s.scene)
   const gl = useThree((s) => s.gl)
   useEffect(() => {
+    const look = lookOf(room)
     const undo: (() => void)[] = []
     const scale = (name: string, k: number, color?: string) => {
       const l = room.scene.getObjectByName(name) as THREE.Light | undefined
@@ -75,9 +118,25 @@ export function WarmLights({ room }: { room: RoomHandle }) {
         l.color.copy(c)
       })
     }
-    scale('Sun', OFF.has('sun') ? 0 : SUN.boost, SUN.color)
-    scale('Room_Fill', OFF.has('fill') ? 0 : FILL_SCALE)
-    scale('Lamp_Light', OFF.has('lamp') ? 0 : LAMP_SCALE)
+    scale('Sun', OFF.has('sun') ? 0 : look.sun.boost, look.sun.color)
+    scale('Room_Fill', OFF.has('fill') ? 0 : look.fill)
+    scale('Lamp_Light', OFF.has('lamp') ? 0 : look.lamp)
+    // at night the pendant and the shelf LED are the real lights: let them cast shadows (static, drawn once like the
+    // sun's) — the chair and desk sit on the floor instead of floating, the desk shades what's under it
+    for (const [name, size] of [
+      ['Room_Fill', 1024],
+      ['Lamp_Light', 1024],
+    ] as const) {
+      const l = room.scene.getObjectByName(name) as THREE.PointLight | THREE.SpotLight | undefined
+      if (!l || look !== NIGHT || OFF.has(`shadow-${name}`)) continue
+      l.castShadow = true
+      l.shadow.mapSize.set(size, size)
+      l.shadow.bias = -0.0005
+      l.shadow.normalBias = 0.02
+      l.shadow.camera.near = 0.05 // the cluster's balls hang right beside its light
+      if (name === 'Room_Fill') l.shadow.intensity = 0.8 // light still spills round the nearest balls
+      undo.push(() => (l.castShadow = false))
+    }
 
     room.scene.traverse((o) => {
       const m = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined
@@ -88,8 +147,15 @@ export function WarmLights({ room }: { room: RoomHandle }) {
       // thickness away from the inside corners, so there are no shadow-acne light slivers where two walls meet
       if (/^(Wall_|Floor|Ceiling)/.test(o.name)) m.shadowSide = THREE.FrontSide
       if (m.name === 'garden') {
-        m.emissiveIntensity *= GARDEN.glow
-        m.emissive.set(GARDEN.tint)
+        m.emissiveIntensity *= look.garden.glow
+        m.emissive.set(look.garden.tint)
+      }
+      // light washes (LED glow, downlight scallops): pure added light — no surface of their own, never hit by
+      // hover / clicks / movement
+      if (/Wash$/.test(m.name)) {
+        m.blending = THREE.AdditiveBlending
+        m.emissiveIntensity *= OFF.has('led') ? 0 : look.led
+        ;(o as THREE.Mesh).raycast = () => {}
       }
     })
 
@@ -104,7 +170,7 @@ export function WarmLights({ room }: { room: RoomHandle }) {
       const inward = new THREE.Vector3()
       // face the room: from the glass toward the middle of the floor
       inward.set(thinX ? -Math.sign(c.x) || 1 : 0, 0, thinX ? 0 : -Math.sign(c.z) || 1)
-      const area = new THREE.RectAreaLight(WINDOW_GLOW.color, WINDOW_GLOW.intensity, thinX ? size.z : size.x, size.y)
+      const area = new THREE.RectAreaLight(look.windowGlow.color, look.windowGlow.intensity, thinX ? size.z : size.x, size.y)
       // sit on the room side of the wall opening (so it lights the room, not the window reveal)
       const b0 = room.geometry.bounds
       const face = thinX ? (inward.x > 0 ? b0.min.x : b0.max.x) : inward.z > 0 ? b0.min.z : b0.max.z
@@ -118,9 +184,9 @@ export function WarmLights({ room }: { room: RoomHandle }) {
       })
     })
 
-    const hemi = new THREE.HemisphereLight(BOUNCE.sky, BOUNCE.ground, OFF.has('hemi') ? 0 : BOUNCE.intensity)
+    const hemi = new THREE.HemisphereLight(look.bounce.sky, look.bounce.ground, OFF.has('hemi') ? 0 : look.bounce.intensity)
     scene.add(hemi)
-    scene.environmentIntensity = ENV_INTENSITY
+    scene.environmentIntensity = look.env
     // the static shadow map was drawn before these changes (shadow sides): draw it again once
     gl.shadowMap.needsUpdate = true
     return () => {
@@ -132,10 +198,10 @@ export function WarmLights({ room }: { room: RoomHandle }) {
   return null
 }
 
-/* â”€â”€ sunbeams: real sunlight in the air â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* ── sunbeams: real sunlight in the air ───────────────────────────────────────────────────────
  * For each pixel (at half resolution) the view ray is marched across the room, and every step asks the sun's shadow
  * map whether that point of air is in sunlight. So the beam only exists where the sun really comes through the
- * window â€” it carries the window grid, thins out into walls and floor where it lands, glows more when you look
+ * window — it carries the window grid, thins out into walls and floor where it lands, glows more when you look
  * toward the sun, and drifting dust gives it texture. No geometry: nothing to see edge-on. */
 const RAYS_VS = /* glsl */ `
   varying vec2 vUv;
@@ -263,7 +329,7 @@ class SunRaysPass extends Pass {
     sun.updateMatrixWorld(true)
     const dir = sun.target.getWorldPosition(new THREE.Vector3()).sub(sun.getWorldPosition(new THREE.Vector3())).normalize()
     const inset = new THREE.Vector3(0.01, 0.01, 0.01)
-    // each window's sun prism: glass corner + (width, height, sun direction) â†’ inverse maps it to a unit box
+    // each window's sun prism: glass corner + (width, height, sun direction) → inverse maps it to a unit box
     const prisms = glasses.map((g) => {
       const b = new THREE.Box3().setFromObject(g)
       const size = b.getSize(new THREE.Vector3())
@@ -354,9 +420,9 @@ class SunRaysEffect extends Effect {
   }
 }
 
-/* â”€â”€ film grade: warm split-toning, a soft S-curve and a vignette â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── film grade: split-toning (warm or cool), a soft S-curve and a vignette ─────────────────────────── */
 class GradeEffect extends Effect {
-  constructor() {
+  constructor(grade: LookTheme['grade']) {
     super(
       'GradeEffect',
       /* glsl */ `
@@ -378,16 +444,16 @@ class GradeEffect extends Effect {
       {
         blendFunction: BlendFunction.NORMAL,
         uniforms: new Map([
-          ['uWarmth', new THREE.Uniform(GRADE.warmth)],
-          ['uContrast', new THREE.Uniform(GRADE.contrast)],
-          ['uVignette', new THREE.Uniform(GRADE.vignette)],
+          ['uWarmth', new THREE.Uniform(grade.warmth)],
+          ['uContrast', new THREE.Uniform(grade.contrast)],
+          ['uVignette', new THREE.Uniform(grade.vignette)],
         ]),
       },
     )
   }
 }
 
-/* â”€â”€ the post pipeline (renders the frame instead of R3F's default render) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── the post pipeline (renders the frame instead of R3F's default render) ─────────────────── */
 /**
  * `onSlow` is called when frames keep running long (a modest GPU): the parent lowers the render resolution a step,
  * which keeps motion fluid. While content covers the room (camera frozen) the last frame is simply kept.
@@ -401,28 +467,29 @@ export function PostFX({ room, onSlow }: { room: RoomHandle; onSlow: () => void 
   const pace = useRef({ t: 0, n: 0, slow: 0, settle: 3, frozen: 0, redraw: true })
 
   const composer = useMemo(() => {
+    const look = lookOf(room)
     const c = new EffectComposer(gl, { frameBufferType: THREE.HalfFloatType })
     c.addPass(new RenderPass(scene, camera))
     const ao = new N8AOPostPass(scene, camera, size.width, size.height)
     Object.assign(ao.configuration, {
-      aoRadius: AO.radius,
-      distanceFalloff: AO.falloff,
-      intensity: AO.intensity,
-      color: new THREE.Color(AO.color),
+      aoRadius: look.ao.radius,
+      distanceFalloff: look.ao.falloff,
+      intensity: look.ao.intensity,
+      color: new THREE.Color(look.ao.color),
       halfRes: true,
       depthAwareUpsampling: true,
       gammaCorrection: false,
     })
-    ao.setQualityMode(AO.quality) // soft contact shading at half-res â€” the cheapest preset is plenty
+    ao.setQualityMode(AO_QUALITY)
     if (!OFF.has('ao')) c.addPass(ao)
     const sun = room.scene.getObjectByName('Sun') as THREE.DirectionalLight | undefined
     const glasses: THREE.Object3D[] = []
     room.scene.traverse((o) => /^Window_\d+_Glass$/.test(o.name) && glasses.push(o))
-    const rays = sun && glasses.length && !OFF.has('rays') ? new SunRaysPass(camera, sun, room.geometry.bounds, glasses) : null
+    const rays = look.rays && sun && glasses.length && !OFF.has('rays') ? new SunRaysPass(camera, sun, room.geometry.bounds, glasses) : null
     if (rays) c.addPass(rays)
-    const bloom = new BloomEffect({ intensity: BLOOM.intensity, luminanceThreshold: BLOOM.threshold, luminanceSmoothing: BLOOM.smoothing, mipmapBlur: true, radius: BLOOM.radius })
+    const bloom = new BloomEffect({ intensity: look.bloom.intensity, luminanceThreshold: look.bloom.threshold, luminanceSmoothing: look.bloom.smoothing, mipmapBlur: true, radius: look.bloom.radius })
     const tone = new ToneMappingEffect({ mode: ToneMappingMode.ACES_FILMIC })
-    c.addPass(new EffectPass(camera, ...[rays && new SunRaysEffect(rays.target.texture), OFF.has('bloom') ? null : bloom, tone, OFF.has('grade') ? null : new GradeEffect()].filter((e): e is Effect => !!e)))
+    c.addPass(new EffectPass(camera, ...[rays && new SunRaysEffect(rays.target.texture), OFF.has('bloom') ? null : bloom, tone, OFF.has('grade') ? null : new GradeEffect(look.grade)].filter((e): e is Effect => !!e)))
     // high-DPR screens are already supersampled; elsewhere a light SMAA pass cleans up the edges
     if (!OFF.has('smaa') && window.devicePixelRatio < 1.5) c.addPass(new EffectPass(camera, new SMAAEffect({ preset: SMAAPreset.MEDIUM })))
     return c
@@ -435,7 +502,7 @@ export function PostFX({ room, onSlow }: { room: RoomHandle; onSlow: () => void 
   }, [composer, size, dpr])
   useEffect(() => () => composer.dispose(), [composer])
 
-  // compile every material and upload every texture now â€” three.js otherwise does it when an object first comes into
+  // compile every material and upload every texture now — three.js otherwise does it when an object first comes into
   // view, which stalls the first pull-back from the PC. Compiled for the composer's buffer (what the room renders into).
   useEffect(() => {
     scene.traverse((o) => {
