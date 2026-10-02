@@ -2,7 +2,7 @@
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { Document, NodeIO } from '@gltf-transform/core'
-import { KHRLightsPunctual, KHRMaterialsEmissiveStrength, Light as GLight } from '@gltf-transform/extensions'
+import { KHRLightsPunctual, KHRMaterialsEmissiveStrength, KHRMaterialsSheen, Light as GLight } from '@gltf-transform/extensions'
 import { dedup, prune, tangents, unweld, weld } from '@gltf-transform/functions'
 import { generateTangents } from 'mikktspace'
 
@@ -162,7 +162,7 @@ function hex(h, a = 1) {
 
 /**
  * @param root      THREE.Object3D (meshes carry userData.mat; lights/cameras are real three objects)
- * @param materials { key: { color, rough, metal, tex, normal, normalScale, emissive, emissiveTex, emissiveStrength, alpha, cutoff, opacity, double } }
+ * @param materials { key: { color, rough, metal, tex, normal, normalScale, emissive, emissiveTex, emissiveStrength, alpha, cutoff, opacity, double, sheen: { color, rough } } }
  * @param textures  { key: { data: Uint8Array, mime } }
  */
 export async function exportGLB(root, materials, textures, file, { withTangents = false } = {}) {
@@ -172,6 +172,7 @@ export async function exportGLB(root, materials, textures, file, { withTangents 
   const scene = doc.createScene('Room')
   const lights = doc.createExtension(KHRLightsPunctual)
   const strength = doc.createExtension(KHRMaterialsEmissiveStrength)
+  let sheen = null // KHR_materials_sheen (fabrics) — registered only if a material uses it
 
   const texCache = new Map()
   const tex = (key) => {
@@ -199,6 +200,10 @@ export async function exportGLB(root, materials, textures, file, { withTangents 
     if (d.alpha === 'MASK') m.setAlphaMode('MASK').setAlphaCutoff(d.cutoff ?? 0.5)
     if (d.alpha === 'BLEND') m.setAlphaMode('BLEND')
     if (d.double) m.setDoubleSided(true)
+    if (d.sheen) {
+      sheen ??= doc.createExtension(KHRMaterialsSheen)
+      m.setExtension('KHR_materials_sheen', sheen.createSheen().setSheenColorFactor(hex(d.sheen.color).slice(0, 3)).setSheenRoughnessFactor(d.sheen.rough ?? 0.6))
+    }
     matCache.set(key, m)
     return m
   }
@@ -263,7 +268,7 @@ export async function exportGLB(root, materials, textures, file, { withTangents 
   // normal-mapped surfaces get baked MikkTSpace tangents (portable across viewers)
   if (withTangents) await doc.transform(unweld(), tangents({ generateTangents }), weld(), dedup(), prune())
   else await doc.transform(weld(), dedup(), prune())
-  const io = new NodeIO().registerExtensions([KHRLightsPunctual, KHRMaterialsEmissiveStrength])
+  const io = new NodeIO().registerExtensions([KHRLightsPunctual, KHRMaterialsEmissiveStrength, KHRMaterialsSheen])
   await io.write(file, doc)
   return doc
 }
