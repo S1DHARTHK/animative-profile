@@ -102,31 +102,35 @@ await sleep(1500)
 console.log('aim camera ->', JSON.stringify(await aim('camera')))
 await shot('05-hover-camera')
 
-// scroll toward the wall frame (the point under the cursor)
+// scroll toward a wall frame (the point under the cursor) and open its photograph — or, in a room without frames,
+// just move toward the computer
 await sleep(400) // wheel gate after the intro
 const FRAME = (await r3d(() => window.__room3d.ids())).find((i) => i.startsWith('Frame_'))
-let fr = await aim(FRAME)
-console.log('aim frame (far) ->', JSON.stringify(fr))
+const target = FRAME ?? 'pc'
+let fr = await aim(target)
+console.log(`aim ${target} (far) ->`, JSON.stringify(fr))
 const before = await r3d(() => window.__room3d.pose())
 await wheel(100, 12, 70)
 await sleep(1800)
 const after = await r3d(() => window.__room3d.pose())
-console.log('moved toward frame:', JSON.stringify(before.p), '->', JSON.stringify(after.p))
-fr = await aim(FRAME)
-console.log('aim frame (near) ->', JSON.stringify(fr))
-await shot('06-near-frame-hover')
+console.log(`moved toward ${target}:`, JSON.stringify(before.p), '->', JSON.stringify(after.p))
+if (FRAME) {
+  fr = await aim(FRAME)
+  console.log('aim frame (near) ->', JSON.stringify(fr))
+  await shot('06-near-frame-hover')
 
-// click the frame → photograph opens; Esc → back to the same view
-const pose0 = await r3d(() => window.__room3d.pose())
-await page.mouse.click(fr.x, fr.y)
-await sleep(1400)
-await shot('07-photo-open')
-await page.mouse.move(W - 40, 40, { steps: 8 }) // wander while it's open
-await page.keyboard.press('Escape')
-await sleep(1600)
-const pose1 = await r3d(() => window.__room3d.pose())
-console.log('pose before photo', JSON.stringify(pose0), 'after close', JSON.stringify(pose1))
-await shot('08-photo-closed')
+  // click the frame → photograph opens; Esc → back to the same view
+  const pose0 = await r3d(() => window.__room3d.pose())
+  await page.mouse.click(fr.x, fr.y)
+  await sleep(1400)
+  await shot('07-photo-open')
+  await page.mouse.move(W - 40, 40, { steps: 8 }) // wander while it's open
+  await page.keyboard.press('Escape')
+  await sleep(1600)
+  const pose1 = await r3d(() => window.__room3d.pose())
+  console.log('pose before photo', JSON.stringify(pose0), 'after close', JSON.stringify(pose1))
+  await shot('08-photo-closed')
+} else console.log('no wall frames in this room — photo check skipped')
 
 // back up, click the camera → shutter → photography/video
 await page.mouse.move(W / 2, H / 2, { steps: 6 })
