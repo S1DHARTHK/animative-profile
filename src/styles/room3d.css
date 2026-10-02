@@ -138,6 +138,32 @@ html.is-3d body {
   background: #000;
 }
 
+/* the room at night: soft neutral chrome instead of the golden room's cream and amber */
+html.is-3d.theme-night {
+  --ink: #0c0b0a;
+  --paper: #f2efea;
+  --paper-dim: rgba(242, 239, 234, 0.62);
+  --paper-faint: rgba(242, 239, 234, 0.32);
+  --amber: #d8c7ad;
+}
+html.theme-night .tip {
+  background: rgba(10, 10, 13, 0.62);
+  border-color: rgba(238, 241, 245, 0.14);
+}
+html.theme-night .m3-overlay__backdrop {
+  background: rgba(6, 6, 8, 0.86);
+}
+html.theme-night .m3-close {
+  border-color: rgba(238, 241, 245, 0.22);
+  background: rgba(10, 10, 13, 0.4);
+}
+html.theme-night .m3-flash {
+  background: radial-gradient(ellipse at 50% 50%, #ffffff 0%, #e8eef8 75%);
+}
+html.theme-night .loader i {
+  background: rgba(238, 241, 245, 0.1);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .m3-overlay {
     animation: none;
