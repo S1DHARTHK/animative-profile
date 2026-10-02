@@ -33,7 +33,9 @@ export function RoomScene({ onReady }: { onReady: (room: RoomHandle) => void }) 
   const gl = useThree((s) => s.gl)
   const threeScene = useThree((s) => s.scene)
   const glows = useRef<Glow[]>([])
-  const glow = useMemo(() => (modelTheme(scene) === 'night' ? SOFT : WARM), [scene])
+  const night = useMemo(() => modelTheme(scene) === 'night', [scene])
+  const glow = night ? SOFT : WARM
+  const glowAmount = night ? 0.07 : 0.16 // at night the objects are dark — a lighter touch
 
   const room = useMemo(() => {
     const geometry = measureRoom(scene)
@@ -109,7 +111,7 @@ export function RoomScene({ onReady }: { onReady: (room: RoomHandle) => void }) 
       const target = hovered === g.it.id ? 1 : 0
       if (Math.abs(g.h - target) < 0.001) continue
       g.h += (target - g.h) * k
-      for (const { m, emissive } of g.mats) m.emissive.copy(emissive).lerp(glow, g.h * 0.16)
+      for (const { m, emissive } of g.mats) m.emissive.copy(emissive).lerp(glow, g.h * glowAmount)
       for (const { o, base, dir } of g.lift) o.position.copy(base).addScaledVector(dir, g.h * 0.014)
     }
   })
