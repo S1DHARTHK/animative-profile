@@ -410,31 +410,136 @@ export async function buildTextures(root) {
     T.wicker = await fromSVG(`<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512">${strands}</svg>`)
   }
 
-  // wide-wale corduroy: ridges across u (64 per metre), a velvety nap, slight tonal variation
-  {
-    const wale = (u) => Math.abs(Math.sin(Math.PI * u * 64)) ** 0.6
-    const nap = fbm(140, [64, 128])
-    const tone = fbm(141, [4, 8])
-    T.corduroy = await fromPixels(512, 512, (u, v) => {
-      const c = 64 + wale(u) * 26 + (nap(u, v) - 0.5) * 10 + (tone(u, v) - 0.5) * 12
-      return [c, c, c + 4]
-    })
-    T.corduroyN = await normalMap(512, (x, y) => wale(x / 512) * 2.2 + nap(x / 512, y / 512) * 0.2, 2)
-  }
 
-  T.saberGlow = await fromPixels(
-    128,
-    512,
-    (u, v) => {
-      const x = (u - 0.5) / 0.5
-      const y = (v - 0.5) / 0.5
-      const glow = Math.exp(-((x / 0.16) ** 2)) + 0.5 * Math.exp(-((x / 0.5) ** 2))
-      const ends = smooth(Math.min(1, Math.max(0, (1 - Math.abs(y)) / 0.4)))
-      const g = Math.min(1, glow * ends) * 255
-      return [g, g, g, g]
+
+  // the studio: walnut (grain along u; tile = 1.4 m), oak floor planks, fabric weave, woven rug, braided pouf, chair
+  // mesh, fiddle-leaf and snake-plant leaves, a striped pillow
+  {
+    const warp = fbm(91, [2, 4, 8])
+    const fine = fbm(92, [64, 128, 256])
+    const streak = fbm(93, [3, 6])
+    T.walnut = await fromPixels(1024, 1024, (u, v) => {
+      const w = warp(u * 2, v * 3)
+      const grain = Math.sin(2 * Math.PI * (v * 70 + w * 4)) * 0.5 + 0.5
+      const figure = Math.sin(2 * Math.PI * (v * 17 + w * 2.2)) * 0.5 + 0.5
+      const n = (fine(u, v) - 0.5) * 10 + (streak(u, v * 2) - 0.5) * 30 - grain ** 3 * 14 - figure ** 5 * 12
+      return [104 + n, 70 + n * 0.75, 48 + n * 0.55]
+    })
+  }
+  {
+    // oak planks: 6 boards per 1.2 m tile (20 cm), staggered end joints, grain along the boards, a little tone per board
+    const warp = fbm(150, [2, 4, 8])
+    const fine = fbm(151, [64, 128, 256])
+    const r = rng(152)
+    const tone = Array.from({ length: 6 }, () => (r() - 0.5) * 22)
+    const joint = Array.from({ length: 6 }, () => r() * 0.5)
+    const plank = (u, v) => {
+      const row = Math.min(5, Math.floor(v * 6))
+      const lv = v * 6 - row
+      const ju = ((u + joint[row]) * 2) % 1
+      const seam = Math.min(lv, 1 - lv) < 0.006 || Math.min(ju, 1 - ju) < 0.004
+      return { row, lv, seam }
+    }
+    T.floorOak = await fromPixels(1024, 1024, (u, v) => {
+      const { row, seam } = plank(u, v)
+      const w = warp(u * 0.5 + row * 0.31, v * 6)
+      const grain = Math.sin(2 * Math.PI * (v * 160 + w * 5 + row * 0.37)) * 0.5 + 0.5
+      const n = (fine(u, v) - 0.5) * 12 + tone[row] - grain ** 4 * 20
+      if (seam) return [128, 104, 82]
+      return [188 + n, 158 + n * 0.88, 126 + n * 0.75]
+    })
+    T.floorOakN = await normalMap(1024, (x, y) => {
+      const { seam } = plank(x / 1024, y / 1024)
+      return (seam ? 0 : 1) + (fine(x / 1024, y / 1024) - 0.5) * 0.15
+    }, 1.2)
+  }
+  {
+    // a fine plain weave with a soft mottle (tinted per fabric)
+    const mott = fbm(160, [4, 8, 16])
+    const weave = (x, y) => {
+      const wx = Math.sin((x / 3) * Math.PI) * 0.5 + 0.5
+      const wy = Math.sin((y / 3) * Math.PI) * 0.5 + 0.5
+      return (Math.floor(x / 3) + Math.floor(y / 3)) % 2 ? wx : wy
+    }
+    T.fabricWeave = await fromPixels(512, 512, (u, v, x, y) => {
+      const c = 205 + (weave(x, y) - 0.5) * 9 + (mott(u, v) - 0.5) * 22
+      return [c, c, c]
+    })
+    T.fabricN = await normalMap(512, (x, y) => weave(x, y) * 0.35 + mott(x / 512, y / 512) * 0.5, 1.0)
+  }
+  {
+    // chunky basket-weave rug (cream)
+    const n = fbm(161, [32, 64])
+    const cell = (x, y) => {
+      const horiz = (Math.floor(x / 24) + Math.floor(y / 24)) % 2 === 0
+      const across = (horiz ? y : x) % 8
+      return Math.sin(((across + 0.5) / 8) * Math.PI)
+    }
+    T.weaveRug = await fromPixels(512, 512, (u, v, x, y) => {
+      const c = 200 + cell(x, y) * 34 + (n(u, v) - 0.5) * 14
+      return [c, c * 0.97, c * 0.92]
+    })
+    T.weaveRugN = await normalMap(512, (x, y) => cell(x, y) * 1.4 + n(x / 512, y / 512) * 0.2, 1.4)
+  }
+  {
+    // braided jute pouf: rows of chevron loops
+    const n = fbm(162, [32, 64])
+    const braid = (x, y) => {
+      const row = Math.floor(y / 32)
+      const ly = (y % 32) / 32
+      const lx = ((x + (row % 2) * 16) % 32) / 32
+      const chevron = Math.abs(lx - 0.5) * 2
+      return Math.sin(Math.PI * ((ly + chevron * 0.5) % 1))
+    }
+    T.braid = await fromPixels(512, 512, (u, v, x, y) => {
+      const c = 120 + braid(x, y) * 70 + (n(u, v) - 0.5) * 18
+      return [c * 1.12, c * 0.9, c * 0.6]
+    })
+    T.braidN = await normalMap(512, (x, y) => braid(x, y) * 1.6, 1.6)
+  }
+  // light grey shag: long tufts (noise at several scales), a soft pile normal
+  {
+    const tuft = fbm(170, [96, 192, 384])
+    const clump = fbm(171, [16, 32])
+    T.shag = await fromPixels(512, 512, (u, v) => {
+      const c = 188 + (tuft(u, v) - 0.5) * 60 + (clump(u, v) - 0.5) * 24
+      return [c, c * 0.99, c * 0.97]
+    })
+    T.shagN = await normalMap(512, (x, y) => tuft(x / 512, y / 512) * 1.6 + clump(x / 512, y / 512) * 0.6, 2.4)
+  }
+  // office-chair mesh: a fine grid of black strands (alpha)
+  T.meshWeave = await fromPixels(
+    256,
+    256,
+    (u, v, x, y) => {
+      const on = x % 6 < 2 || y % 5 < 2
+      return [24, 24, 26, on ? 255 : 0]
     },
     { alpha: true, mime: 'image/png' },
   )
+  // fiddle-leaf fig leaf (violin-shaped, glossy dark green, pale midrib and veins), tip up
+  T.figLeaf = await fromSVG(`<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3f6a2c"/><stop offset="1" stop-color="#2b4d1f"/></linearGradient></defs>
+    <path d="M128 248 C 96 236 54 214 44 168 C 36 130 58 112 70 92 C 82 70 74 40 100 20 C 116 8 140 8 156 20 C 182 40 174 70 186 92 C 198 112 220 130 212 168 C 202 214 160 236 128 248 Z" fill="url(#g)"/>
+    <path d="M128 248 L128 18" stroke="#8aa86a" stroke-width="3"/>
+    ${[60, 95, 130, 165, 200].map((y) => `<path d="M128 ${y} Q 104 ${y - 14} 78 ${y - 30} M128 ${y} Q 152 ${y - 14} 178 ${y - 30}" stroke="#6f8f52" stroke-width="2" fill="none"/>`).join('')}
+  </svg>`)
+  // snake-plant leaf: dark green with lighter cross-bands, yellow margins
+  {
+    const n = fbm(163, [8, 16])
+    T.snakeLeaf = await fromPixels(128, 512, (u, v) => {
+      const edge = Math.min(u, 1 - u)
+      if (edge < 0.08) return [196, 184, 92]
+      const band = Math.sin(2 * Math.PI * (v * 22 + n(u * 0.5, v) * 2.5)) * 0.5 + 0.5
+      const c = 0.75 + band * 0.35
+      return [42 * c, 78 * c, 46 * c]
+    })
+  }
+  // a white pillow with black woven stripes
+  T.pillowStripe = await fromPixels(256, 256, (u, v, x, y) => {
+    const stripe = Math.floor(y / 16) % 3 === 0 && (y % 16) < 7
+    const c = stripe ? 40 : 232 + ((x + y) % 4) * 3
+    return [c, c, c * 0.98]
+  })
 
   return T
 }
