@@ -308,30 +308,7 @@ export async function buildTextures(root) {
   // the family photograph (small room's only frame): landscape and viewed up close, so twice the width
   T['photo-family'] = await photo('family', 1024, 512)
 
-  // wall shelves: glued-plank slab wood (grain along u; tile = 1.2 m) and black wire mesh
-  {
-    const warp = fbm(81, [2, 4, 8])
-    const fine = fbm(82, [64, 128, 256])
-    const r = rng(83)
-    const tone = Array.from({ length: 8 }, () => (r() - 0.5) * 26)
-    T.slab = await fromPixels(1024, 1024, (u, v, x, y) => {
-      const plank = Math.floor(y / 128)
-      const ly = y % 128
-      const w = warp(u * 2 + plank * 0.37, v * 4 + plank * 0.21)
-      const grain = Math.sin(2 * Math.PI * (v * 96 + w * 3.2)) * 0.5 + 0.5
-      const ring = Math.sin(2 * Math.PI * (v * 23 + w * 1.4)) * 0.5 + 0.5
-      const n = (fine(u, v) - 0.5) * 12 + tone[plank] - grain ** 3 * 18 - ring ** 6 * 14
-      const seam = ly < 2 ? -38 : ly < 4 ? -12 : 0
-      return [206 + n + seam, 148 + n * 0.85 + seam, 92 + n * 0.6 + seam * 0.8]
-    })
-  }
-  T.weave = await fromPixels(256, 256, (u, v, x, y) => {
-    const line = x % 16 < 3 || y % 16 < 3
-    const c = line ? 58 + ((x * 7 + y * 3) % 5) * 3 : 18
-    return [c, c, c]
-  })
-
-  // modern desk setup: the monitor's wallpaper
+  // the monitor's wallpaper (misty mountains at dusk; the dark room shows it in black & white)
   {
     // misty mountain ridges at dusk (as on the monitor in the reference photo)
     const r = rng(97)
@@ -361,5 +338,89 @@ export async function buildTextures(root) {
       { mime: 'image/jpeg', quality: 88 },
     )
   }
+  T.wallpaperMono = { data: new Uint8Array(await sharp(Buffer.from(T.wallpaper.data)).grayscale().linear(0.8, -4).jpeg({ quality: 88, mozjpeg: true }).toBuffer()), mime: 'image/jpeg' }
+
+  // the modern dark room: neutral plaster, grey loop-pile carpet, the LED glow gradient (bright along the bottom edge)
+  {
+    const low = fbm(11, [3, 6, 12])
+    const hi = fbm(12, [48, 96, 192])
+    T.plasterGray = await fromPixels(512, 512, (u, v) => {
+      const n = (low(u, v) - 0.5) * 12 + (hi(u, v) - 0.5) * 7
+      return [230 + n, 230 + n, 232 + n]
+    })
+  }
+  {
+    const pile = fbm(110, [128, 256])
+    const mott = fbm(111, [8, 16])
+    T.carpet = await fromPixels(512, 512, (u, v) => {
+      const n = (pile(u, v) - 0.5) * 34 + (mott(u, v) - 0.5) * 10
+      return [98 + n, 98 + n, 101 + n]
+    })
+    T.carpetN = await normalMap(512, (x, y) => pile(x / 512, y / 512) * 1.2, 1.5)
+  }
+  T.ledGlow = await fromPixels(
+    256,
+    256,
+    (u, v) => {
+      const e = smooth(Math.min(1, u / 0.06)) * smooth(Math.min(1, (1 - u) / 0.06))
+      const g = v ** 2.4 * e * 255
+      return [g, g, g, g]
+    },
+    { alpha: true, mime: 'image/png' },
+  )
+
+  {
+    const stipple = fbm(120, [96, 192, 384])
+    T.paintN = await normalMap(512, (x, y) => stipple(x / 512, y / 512), 1.1)
+  }
+  T.scallop = await fromPixels(
+    256,
+    512,
+    (u, v) => {
+      const t = 1 - v // distance down from the ceiling (the texture's bottom row is the top of the wall)
+      const x = u - 0.5
+      const arc = 0.05 + 2.2 * x * x // the scallop's lit edge
+      const inside = smooth(Math.min(1, Math.max(0, (t - arc) / 0.05)))
+      const fall = Math.exp(-t * 2.2) * (0.35 + 0.65 * Math.exp(-((x / 0.22) ** 2)))
+      const hot = 0.6 * Math.exp(-(((t - arc - 0.04) / 0.05) ** 2)) * Math.exp(-((x / 0.12) ** 2))
+      const sides = 1 - smooth(Math.min(1, Math.max(0, (Math.abs(x) - 0.3) / 0.2)))
+      const g = Math.min(1, inside * (fall + hot) * sides) * 255
+      return [g, g, g, g]
+    },
+    { alpha: true, mime: 'image/png' },
+  )
+
+  {
+    const r = rng(130)
+    const tones = ['#4a3220', '#5c3e27', '#3b281a', '#6a4a2f']
+    let strands = ''
+    for (let i = 0; i < 150; i++) {
+      const x0 = r() * 512
+      const y0 = r() * 512
+      const ang = r() * Math.PI * 2
+      const len = 140 + r() * 260
+      const x3 = x0 + Math.cos(ang) * len
+      const y3 = y0 + Math.sin(ang) * len
+      const c1 = [x0 + (r() - 0.5) * 220, y0 + (r() - 0.5) * 220].map((v) => v.toFixed(1))
+      const c2 = [x3 + (r() - 0.5) * 220, y3 + (r() - 0.5) * 220].map((v) => v.toFixed(1))
+      const d = `M ${x0.toFixed(1)} ${y0.toFixed(1)} C ${c1} ${c2} ${x3.toFixed(1)} ${y3.toFixed(1)}`
+      const w = (4 + r() * 4).toFixed(1)
+      for (const dx of [-512, 0, 512]) strands += `<path d="${d}" transform="translate(${dx} 0)" stroke="${tones[i % 4]}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`
+    }
+    T.wicker = await fromSVG(`<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512">${strands}</svg>`)
+  }
+
+  // wide-wale corduroy: ridges across u (64 per metre), a velvety nap, slight tonal variation
+  {
+    const wale = (u) => Math.abs(Math.sin(Math.PI * u * 64)) ** 0.6
+    const nap = fbm(140, [64, 128])
+    const tone = fbm(141, [4, 8])
+    T.corduroy = await fromPixels(512, 512, (u, v) => {
+      const c = 64 + wale(u) * 26 + (nap(u, v) - 0.5) * 10 + (tone(u, v) - 0.5) * 12
+      return [c, c, c + 4]
+    })
+    T.corduroyN = await normalMap(512, (x, y) => wale(x / 512) * 2.2 + nap(x / 512, y / 512) * 0.2, 2)
+  }
+
   return T
 }
