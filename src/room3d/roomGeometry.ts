@@ -17,6 +17,13 @@ export interface RoomGeometry {
 
 const worldBox = (o: THREE.Object3D) => new THREE.Box3().setFromObject(o)
 
+/** the model's look, from its extras (`theme`: 'night' for the modern room at night; none = the photographed room) */
+export function modelTheme(scene: THREE.Object3D): string | undefined {
+  let theme: string | undefined
+  scene.traverse((o) => (theme ??= o.userData.theme as string | undefined))
+  return theme
+}
+
 export function measureRoom(scene: THREE.Object3D): RoomGeometry {
   scene.updateMatrixWorld(true)
   const need = (name: string) => {
