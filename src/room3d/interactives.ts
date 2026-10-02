@@ -18,8 +18,8 @@ export interface Interactive {
   photoMesh?: THREE.Object3D
 }
 
-// the computer: the ultrawide in room-small.glb, the CRT + tower in room.glb
-export const PC_NODES = ['Monitor', 'CRT_Monitor', 'PC_Tower']
+// the computer: the monitors (+ PC) in room-small.glb, the CRT + tower in room.glb
+export const PC_NODES = ['Monitor', 'Monitor_Right', 'CRT_Monitor', 'PC_Tower']
 export const CAMERA_NODES = ['Camera']
 export const FRAME_PREFIX = 'Frame_'
 
