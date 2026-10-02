@@ -11,17 +11,18 @@ Both come from the same generator. The rest of this page describes `room.glb`; `
 (`Architecture`, `Door`, `Outside_Garden`) but is the **modern room at night** (`theme: 'night'` in the
 `Room` node's extras — the site switches to its night look from it):
 
-* dark olive-grey paint (fine roller stipple), a dark ceiling, grey carpet; `Fitout` adds a tray ceiling
-  (`Ceiling_Soffit`) with a warm cove LED, twin recessed `Downlights` on the side walls, and LED lines at the floor. LED strips and downlight lenses are bright emissive bars; the light they
-  throw is drawn by soft `ledWash` / `scallopWash` planes (the site renders them additively)
-* the gaming corner: `Desk` — an L-shaped wooden desk along the back wall, returning along the right wall (end panel,
-  drawer cabinet); `Desk_Set` holds `Monitor` (its centred 4:3 `Monitor_Screen` is where the site shows the resume)
-  and `Monitor_Right`, two `Speaker`s, an RGB gaming `PC_Tower` with a glass side, `Keyboard` (pink backlight),
-  `Mouse`, `Desk_Mat` and `Camera`; a dark `Rug` under the all-black gaming `Chair` (kept off the camera's path)
-* `Slat_Wall` — wooden slats on dark felt over the back wall, a warm LED line along the desk; three glowing `Sabers`
-  above the monitors; `Wood_Shelves` — wooden floating shelves with LED underglow (figurines, books, a plant); the
-  light under the lowest is `Lamp_Light`, aimed at the keyboard
-* `Sofa` — a charcoal corduroy bean-bag loveseat against the front wall, facing the desk
+* warm off-white paint (fine roller stipple), a light ceiling, an oak plank floor; `Fitout` adds a tray ceiling
+  (`Ceiling_Soffit`) with a warm cove LED, twin recessed `Downlights` on the side walls, and LED lines at the floor.
+  LED strips and downlight lenses are bright emissive bars; the light they throw is drawn by soft `ledWash` /
+  `scallopWash` planes (the site renders them additively)
+* the workspace: a black `Slat_Panel` (with an abstract relief) standing off the back wall, LEDs behind its edges
+  washing the wall in a warm halo; `Desk` — a walnut standing desk on a black frame; `Desk_Set` holds `Monitor` on a
+  walnut `Monitor_Riser` (its centred 4:3 `Monitor_Screen` is where the site shows the resume; the `Light_Bar` on top
+  carries `Lamp_Light`), two `Speaker`s, a `Console`, `Keyboard`, `Mouse` on a `Desk_Mat`, a `Mug` and `Camera`;
+  a black mesh office `Chair` on a grey shag `Rug`; plants: a `Wall_Shelf` of trailing pothos, a `Monstera_Stand`,
+  a `Fiddle_Fig` and `Snake_Plant`s
+* the `Lounge` along the front wall (behind you as you face the desk): a charcoal and a cream `Bean_Bag` with pillows,
+  a braided `Pouf`, a walnut `Side_Table` (vase, candles) on a cream woven rug
 * `Globe_Shelf` — a spherical bookshelf on the left wall (curved shelves and meridian fins in honey oak, filled with
   books and two small framed photos)
 * `Balcony_Door` — French doors with sidelights in the left wall where the window was (its glass is `Window_1_Glass`),
