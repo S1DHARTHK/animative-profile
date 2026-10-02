@@ -93,7 +93,9 @@ const PROFILES = {
       chairStyle: 'mesh',
       slatPanel: { x: 0.25, w: 1.7, h: 2.5 },
       wallShelf: { x: -1.12, y: 1.86 },
-      monsteraStand: { x: -1.05, z: Z0 + 0.25 },
+      // the corner left of the desk (reference photo): pebble-shaped stone planters on white pebbles — a bird of
+      // paradise in the tall egg, an olive tree in the low one, a spiky rosette in the small one
+      planters: { x: -1.05, z: Z0 + 0.3 },
       fig: { x: 1.36, z: Z0 + 0.32 },
       snakes: [
         [1.44, -1.02, 0.7],
@@ -101,10 +103,16 @@ const PROFILES = {
       ],
       rugs: [
         { mat: 'shagGray', x: 0.3, z: -1.0, w: 1.9, d: 1.35 },
-        { mat: 'rugCream', x: -0.25, z: 1.22, w: 2.2, d: 1.45 },
+        { mat: 'rugCream', x: -0.3, z: 0.72, w: 2.3, d: 1.7 },
       ],
-      // the lounge along the front wall (behind you as you face the desk): bean bags, a pouf, a side table
-      lounge: { charcoal: [-0.62, 1.32, 18], cream: [0.32, 1.42, -14], poufAt: [-0.18, 0.62], table: [-1.36, 1.78] },
+      // the lounge along the front wall (behind you as you face the desk): a curved green velvet sofa bowed round the
+      // front-left corner (arc centre, back-line radius, from → to and where the back starts, in degrees; seat depth),
+      // the walnut side table inside its curve, the pouf (on the rug) across from it
+      lounge: {
+        sofa: { c: [-0.28, 0.64], r: 1.3, from: 195, to: 38, backFrom: 150, depth: 0.9 },
+        table: [-0.28, 0.64],
+        poufAt: [0.42, 0.38, 0.016],
+      },
       rug: null,
       shelf: null,
       bench: null,
@@ -232,13 +240,14 @@ const MATERIALS = {
   bookWhite: { color: '#ebe6dc', rough: 0.7 },
   downlightLens: { color: '#ffffff', emissive: '#ffe7c4', emissiveStrength: 6 },
   walnut: { tex: 'walnut', rough: 0.42, normal: 'woodN', normalScale: 0.35 },
-  slatBlack: { tex: 'oak', color: '#3a3734', rough: 0.6, normal: 'woodN', normalScale: 0.3 },
-  feltBlack: { color: '#1b1b1a', rough: 1 },
+  slatGray: { color: '#cdccc8', rough: 0.62, normal: 'woodN', normalScale: 0.25 },
+  feltGray: { color: '#b4b3af', rough: 1 },
   artBlack: { color: '#151515', rough: 0.6 },
   artMatte: { color: '#1d1d1d', rough: 0.85 },
   wallpaper: { color: '#000000', emissive: '#ffffff', emissiveTex: 'wallpaper', emissiveStrength: 0.9, rough: 0.22 },
   deskMatGray: { color: '#4a4a4c', rough: 0.95 },
-  ps5White: { color: '#f2f2f0', rough: 0.28 },
+  pcGlass: { color: '#0e0e12', opacity: 0.35, alpha: 'BLEND', rough: 0.05, double: true },
+  pcLight: { color: '#ffffff', emissive: '#f4f1ea', emissiveStrength: 3 },
   ceramicWhite: { color: '#f4f2ee', rough: 0.25 },
   ceramicDark: { color: '#4a4744', rough: 0.4 },
   coffee: { color: '#3a2316', rough: 0.15 },
@@ -248,14 +257,20 @@ const MATERIALS = {
   figLeaf: { tex: 'figLeaf', alpha: 'MASK', cutoff: 0.5, double: true, rough: 0.45 },
   snakeLeaf: { tex: 'snakeLeaf', double: true, rough: 0.45 },
   chairMesh: { tex: 'meshWeave', alpha: 'MASK', cutoff: 0.4, double: true, rough: 0.7 },
-  chairSeat: { tex: 'fabricWeave', color: '#2a2a2b', normal: 'fabricN', normalScale: 0.8, rough: 0.9 },
-  beanCharcoal: { tex: 'fabricWeave', color: '#8d8a86', normal: 'fabricN', normalScale: 0.8, rough: 0.95 },
-  beanCream: { tex: 'fabricWeave', color: '#efe6d6', normal: 'fabricN', normalScale: 0.9, rough: 0.95 },
-  knitCream: { tex: 'fabricWeave', color: '#f3ece0', normal: 'fabricN', normalScale: 1.4, rough: 0.95 },
-  pillowStripe: { tex: 'pillowStripe', normal: 'fabricN', normalScale: 0.8, rough: 0.9 },
-  pouf: { tex: 'braid', normal: 'braidN', normalScale: 1.2, rough: 0.9 },
-  shagGray: { tex: 'shag', color: '#f2f0ec', normal: 'shagN', normalScale: 1.6, rough: 1 },
-  rugCream: { tex: 'weaveRug', normal: 'weaveRugN', normalScale: 1, rough: 1 },
+  chairSeat: { tex: 'fabricWeave', color: '#2a2a2b', normal: 'fabricN', normalScale: 0.8, rough: 0.9, sheen: { color: '#5a5a5c', rough: 0.5 } },
+  velvetGreen: { tex: 'velvet', color: '#3f7a5b', normal: 'velvetN', normalScale: 0.5, rough: 0.82, sheen: { color: '#8cc2a2', rough: 0.35 } },
+  pillowCream: { tex: 'fabricWeave', color: '#efe7d9', normal: 'fabricN', normalScale: 0.8, rough: 0.92, sheen: { color: '#fff6e8', rough: 0.5 } },
+  pouf: { tex: 'braid', normal: 'braidN', normalScale: 1.1, rough: 0.92 },
+  shagGray: { tex: 'shag', color: '#f2f0ec', normal: 'shagN', normalScale: 1.6, rough: 1, sheen: { color: '#ffffff', rough: 0.8 } },
+  stoneCream: { tex: 'stone', color: '#f0ebe3', normal: 'stoneN', normalScale: 0.9, rough: 0.92 },
+  pebbleWhite: { color: '#f2efe9', rough: 0.42 },
+  pebbleGray: { color: '#d8d3ca', rough: 0.48 },
+  birdLeaf: { tex: 'birdLeaf', normal: 'birdLeafN', normalScale: 0.6, double: true, rough: 0.4 },
+  oliveBark: { color: '#857b6d', rough: 0.85 },
+  oliveLeaf: { tex: 'oliveLeaf', color: '#a7ae9b', double: true, rough: 0.6 },
+  oliveLeafPale: { tex: 'oliveLeaf', color: '#f2f4ec', double: true, rough: 0.55 },
+  agaveLeaf: { tex: 'agaveLeaf', double: true, rough: 0.5 },
+  rugCream: { tex: 'weaveRug', normal: 'weaveRugN', normalScale: 1, rough: 1, sheen: { color: '#fffaf0', rough: 0.75 } },
   monitorBlack: { color: '#141416', rough: 0.35, metal: 0.4 },
   wallpaperMono: { color: '#000000', emissive: '#ffffff', emissiveTex: 'wallpaperMono', emissiveStrength: 0.8, rough: 0.22 },
   screenWindow: { color: '#100b08', rough: 0.25 },
@@ -269,7 +284,7 @@ const MATERIALS = {
   sphereDark: { color: '#2a2a2e', rough: 0.2, metal: 0.8 },
   potDark: { color: '#2b2b2e', rough: 0.6 },
   frameWhite: { color: '#efece5', rough: 0.45 },
-  sheer: { color: '#f7f4ee', opacity: 0.5, alpha: 'BLEND', double: true, rough: 0.95 },
+  sheer: { color: '#f7f4ee', opacity: 0.5, alpha: 'BLEND', double: true, rough: 0.95, sheen: { color: '#ffffff', rough: 0.4 } },
   stone: { tex: 'tiles', color: '#ddd7cc', rough: 0.7 },
   stoneWhite: { color: '#e9e5dc', rough: 0.75 },
   cypress: { color: '#2f3d27', rough: 0.95 },
@@ -983,28 +998,39 @@ function monitorRiser(w = 1.06, d = 0.24, h = 0.11) {
   return bake(g)
 }
 
-/** PS5-style console standing upright: black core between two curved white shells, on a small stand */
-function console5() {
-  const g = G('Console')
-  const parts = G('Console_Parts')
-  const H5 = 0.39
-  const D5 = 0.26
-  parts.add(M(rbox(0.055, H5 - 0.02, D5 - 0.03, 0.008).translate(0, H5 / 2 + 0.012, 0), 'caseBlack'))
-  // the shells: a silhouette that flares toward the top, extruded thin, one each side
-  const sil = new THREE.Shape()
-  sil.moveTo(-D5 / 2 + 0.03, 0.01)
-  sil.lineTo(D5 / 2 - 0.03, 0.01)
-  sil.quadraticCurveTo(D5 / 2 + 0.01, H5 * 0.55, D5 / 2 + 0.005, H5 + 0.005)
-  sil.quadraticCurveTo(0, H5 + 0.03, -D5 / 2 - 0.005, H5 + 0.005)
-  sil.quadraticCurveTo(-D5 / 2 - 0.01, H5 * 0.55, -D5 / 2 + 0.03, 0.01)
-  for (const s of [-1, 1]) {
-    const shell = new THREE.ExtrudeGeometry(sil, { depth: 0.012, bevelEnabled: true, bevelThickness: 0.004, bevelSize: 0.004, bevelSegments: 3, curveSegments: 16 })
-    shell.rotateY(Math.PI / 2).translate(s * 0.034 - 0.006, 0.012, 0)
-    parts.add(M(shell, 'ps5White'))
+/**
+ * Desktop PC tower: a black mid-tower with a tinted glass side (+x) — motherboard, graphics card and three front fans
+ * softly lit inside; front faces +z. Part of "the computer" (`PC_Tower`).
+ */
+function pcTower2() {
+  const g = G('PC_Tower')
+  const w = 0.21
+  const h = 0.46
+  const d = 0.42
+  const parts = G('PC_Parts')
+  const y0 = 0.012 // on its feet
+  parts.add(M(box(0.005, h, d).translate(-w / 2 + 0.0025, y0 + h / 2, 0), 'caseBlack'))
+  parts.add(M(rbox(w, 0.008, d, 0.002).translate(0, y0 + h - 0.004, 0), 'caseBlack'))
+  parts.add(M(rbox(w, 0.008, d, 0.002).translate(0, y0 + 0.004, 0), 'caseBlack'))
+  parts.add(M(rbox(w, h, 0.014, 0.003).translate(0, y0 + h / 2, d / 2 - 0.007), 'caseBlack'))
+  parts.add(M(box(w, h, 0.005).translate(0, y0 + h / 2, -d / 2 + 0.0025), 'caseBlack'))
+  for (const sz of [-1, 1]) parts.add(M(box(0.03, y0, 0.05).translate(0, y0 / 2, sz * 0.16), 'rubber'))
+  // inside: motherboard, CPU cooler, RAM, graphics card, three front fans
+  parts.add(M(box(0.004, h - 0.08, d - 0.12).translate(-w / 2 + 0.012, y0 + h / 2 + 0.01, -0.03), 'kbBlack'))
+  parts.add(M(cyl(0.045, 0.045, 0.06, 24).rotateZ(Math.PI / 2).translate(-0.05, y0 + 0.33, -0.05), 'monitorBlack'))
+  for (let i = 0; i < 4; i++) parts.add(M(box(0.006, 0.075, 0.008).translate(-w / 2 + 0.028, y0 + 0.33, 0.04 + i * 0.014), 'monitorBlack'))
+  parts.add(M(box(0.05, 0.12, 0.29).translate(-0.035, y0 + 0.18, -0.02), 'monitorBlack'))
+  parts.add(M(box(0.002, 0.01, 0.25).translate(-0.009, y0 + 0.235, -0.02), 'pcLight'))
+  for (let i = 0; i < 3; i++) {
+    const y = y0 + 0.1 + i * 0.13
+    parts.add(M(new THREE.TorusGeometry(0.05, 0.004, 8, 32).translate(0, y, d / 2 - 0.028), 'pcLight'))
+    parts.add(M(cyl(0.046, 0.046, 0.008, 24).rotateX(Math.PI / 2).translate(0, y, d / 2 - 0.032), 'kbBlack'))
   }
-  parts.add(M(cyl(0.065, 0.07, 0.012, 32).translate(0, 0.006, 0), 'caseBlack'))
-  parts.add(M(box(0.06, 0.004, 0.004).translate(0, H5 - 0.03, D5 / 2 - 0.012), 'ledStrip'))
+  parts.add(M(cyl(0.007, 0.007, 0.004, 16).rotateX(Math.PI / 2).translate(0.06, y0 + h - 0.025, d / 2 + 0.001), 'blackSteel'))
   g.add(bake(parts))
+  const glass = M(new THREE.PlaneGeometry(d - 0.02, h - 0.02).rotateY(Math.PI / 2).translate(w / 2, y0 + h / 2, 0), 'pcGlass', 'PC_Glass')
+  glass.userData.keep = true
+  g.children[0].add(glass)
   return g
 }
 
@@ -1019,7 +1045,7 @@ function mugAndPuck() {
 }
 
 /**
- * The desk set (after the reference photo): the monitor on a walnut riser with a light bar (the desk light), console,
+ * The desk set (after the reference photo): the monitor on a walnut riser with a light bar (the desk light), the PC,
  * speakers, keyboard + mouse on a felt mat, a mug, and the camera (the photography entry point).
  */
 function studioSet() {
@@ -1030,7 +1056,7 @@ function studioSet() {
   put(monitor({ w: 0.72, h: 0.41, yc: 0.3, wallpaper: 'wallpaper', lightBar: true }), 0, -0.13, 0, top + 0.11)
   put(speaker(), -0.46, -0.21, 6, top + 0.11)
   put(speaker(), 0.46, -0.21, -6, top + 0.11)
-  put(console5(), -0.58, -0.16, 8)
+  put(pcTower2(), -0.64, -0.13, 4) // beside the riser, glass side toward the monitor
   put(M(rbox(0.8, 0.004, 0.32, 0.002, 1).translate(0, 0.002, 0), 'deskMatGray', 'Desk_Mat'), 0.02, 0.15)
   put(modernKeyboard(), -0.06, 0.14, 0, top + 0.004)
   put(modernMouse(), 0.3, 0.16, -6, top + 0.004)
@@ -1039,16 +1065,16 @@ function studioSet() {
   return g
 }
 
-/** black slat panel standing just off the back wall, LEDs behind its edges washing the wall in a warm halo; an abstract
+/** light grey slat panel standing just off the back wall, LEDs behind its edges washing the wall in a warm halo; an abstract
  *  black relief on it. Origin: the wall face, centred */
 function slatPanel() {
   const g = G('Slat_Panel')
   const { w, h } = L.slatPanel
   const parts = G('Slat_Panel_Parts')
-  parts.add(M(box(w, h, 0.012).translate(0, h / 2, 0.03 + 0.006), 'feltBlack'))
+  parts.add(M(box(w, h, 0.012).translate(0, h / 2, 0.03 + 0.006), 'feltGray'))
   const pitch = 0.042
   const sw = 0.026
-  for (let x = -w / 2 + sw / 2 + 0.004; x < w / 2 - sw / 2; x += pitch) parts.add(M(box(sw, h, 0.022, 1.4).translate(x, h / 2, 0.042 + 0.011), 'slatBlack'))
+  for (let x = -w / 2 + sw / 2 + 0.004; x < w / 2 - sw / 2; x += pitch) parts.add(M(box(sw, h, 0.022, 1.4).translate(x, h / 2, 0.042 + 0.011), 'slatGray'))
   // the relief: a black square with a raised arch
   const art = G('Panel_Art')
   art.add(M(box(0.46, 0.5, 0.018).translate(0, 0, 0), 'artBlack'))
@@ -1101,21 +1127,6 @@ function shelfPothos(seed) {
   return g
 }
 
-/** a monstera on a three-legged wooden plant stand */
-function monsteraOnStand(seed) {
-  const g = G('Monstera_Stand')
-  const stand = G('Plant_Stand')
-  for (let k = 0; k < 3; k++) {
-    const a = (k / 3) * Math.PI * 2
-    stand.add(M(rod([Math.cos(a) * 0.13, 0, Math.sin(a) * 0.13], [Math.cos(a) * 0.1, 0.36, Math.sin(a) * 0.1], 0.012, 8), 'walnut'))
-  }
-  stand.add(M(new THREE.TorusGeometry(0.11, 0.008, 6, 32).rotateX(Math.PI / 2).translate(0, 0.33, 0), 'walnut'))
-  stand.add(M(cyl(0.12, 0.12, 0.012, 28).translate(0, 0.36, 0), 'walnut'))
-  g.add(bake(stand))
-  g.add(at(monstera(seed, 0.56, 9), 0, 0.366, 0))
-  return g
-}
-
 /** fiddle-leaf fig: a slim trunk, big leathery leaves on short stems up its top two-thirds */
 function fiddleFig(seed, h = 1.55) {
   const r = rand(seed)
@@ -1164,6 +1175,341 @@ function snakePlant(seed, h = 0.75, potMat = 'potWhite') {
   }
   g.add(bake(parts))
   return g
+}
+
+/* ── stone planters: a bird of paradise, an olive tree, a spiky rosette (after the reference photo) ─────────────── */
+
+/**
+ * A pebble-shaped stone planter: an egg / river-stone body (a sphere reshaped — widest a little below the middle, a
+ * small flat foot, faint lumps) with the top cut away into an opening: a rounded lip, a short inner wall and a bed of
+ * white pebbles a little below the rim; `tilt` slopes the opening down toward +z. rx, rz: half-widths; h: the uncut
+ * height; cut: where the opening starts (unit-sphere height). Returns the planter group and the bed's height at
+ * its centre.
+ */
+function stonePlanter({ rx, rz, h, cut, egg = 0.15, tilt = 0, seed, seg = [56, 48] }) {
+  const rnd = rand(seed)
+  const g = G('Planter')
+  const geo = new THREE.SphereGeometry(1, ...seg)
+  const p = geo.attributes.position
+  const uv = geo.attributes.uv
+  const ring = (y) => Math.sqrt(Math.max(0, 1 - y * y)) * (1 - egg * y)
+  const latC = Math.asin(cut)
+  const yc = ((cut + 1) / 2) * h
+  const fc = ring(cut)
+  const lipW = 0.022 / (Math.min(rx, rz) * fc) // the rim's width as a share of the opening's radius
+  const sink = 0.026
+  const lump = (cx, cz, y) => 1 + 0.014 * lumps(cx * 1.7 + seed * 0.37, y * 1.5, cz * 1.7)
+  const slope = (z, Y) => Y + tilt * z * smoothstep(yc * 0.4, yc, Y)
+  const per = Math.PI * (rx + rz)
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i)
+    const y = Math.max(-1, Math.min(1, p.getY(i)))
+    const z = p.getZ(i)
+    const hl = Math.hypot(x, z)
+    const [cx, cz] = hl > 1e-9 ? [x / hl, z / hl] : [1, 0]
+    const lat = Math.asin(y)
+    let r
+    let Y
+    if (lat <= latC) {
+      r = ring(y) * lump(cx, cz, y)
+      Y = ((y + 1) / 2) * h
+    } else {
+      // the opening, from the cut ring to the pole: over the rounded lip (40% of the rows), down the inner wall
+      // (20%), then across the bed
+      const t = (lat - latC) / (Math.PI / 2 - latC)
+      const R = fc * lump(cx, cz, cut)
+      if (t < 0.4) {
+        const a = (Math.PI * t) / 0.4
+        r = R * (1 - lipW / 2 + (lipW / 2) * Math.cos(a))
+        Y = yc + Math.sin(a) * 0.008
+      } else if (t < 0.6) {
+        r = R * (1 - lipW)
+        Y = yc - sink * smoothstep(0.4, 0.6, t)
+      } else {
+        r = R * (1 - lipW) * (1 - (t - 0.6) / 0.4)
+        Y = yc - sink
+      }
+    }
+    const X = cx * r * rx
+    const Z = cz * r * rz
+    p.setXYZ(i, X, Math.max(0, slope(Z, Y) - 0.006), Z)
+    uv.setXY(i, (uv.getX(i) * per) / 0.3, Y / 0.3)
+  }
+  smoothNormals(geo)
+  g.add(M(geo, 'stoneCream'))
+
+  // white pebbles heaped on the bed: a packed layer, a few more on top
+  const bedA = rx * fc * (1 - lipW) * 0.96
+  const bedB = rz * fc * (1 - lipW) * 0.96
+  const bedY = (z) => slope(z, yc - sink) - 0.006
+  const placed = []
+  for (const [layer, tries] of [
+    [0, 1400],
+    [1, 260],
+  ])
+    for (let k = 0; k < tries; k++) {
+      const a = 0.008 + rnd() * 0.008
+      const px = (rnd() * 2 - 1) * bedA
+      const pz = (rnd() * 2 - 1) * bedB
+      if ((px / (bedA - a)) ** 2 + (pz / (bedB - a)) ** 2 > 1) continue
+      if (placed.some(([qx, qz, qa, ql]) => ql === layer && Math.hypot(px - qx, pz - qz) < (a + qa) * 0.92)) continue
+      placed.push([px, pz, a, layer])
+      const pebble = new THREE.SphereGeometry(1, 6, 4).scale(a * (0.9 + rnd() * 0.25), a * (0.5 + rnd() * 0.15), a * (0.7 + rnd() * 0.2))
+      pebble.rotateX((rnd() - 0.5) * 0.5).rotateY(rnd() * Math.PI).rotateZ((rnd() - 0.5) * 0.5)
+      pebble.translate(px, bedY(pz) + a * (0.3 + layer * 0.55), pz)
+      g.add(M(pebble, rnd() < 0.2 ? 'pebbleGray' : 'pebbleWhite'))
+    }
+  return { group: g, bed: bedY(0) }
+}
+
+/** many small leaves in one geometry: each a lanceolate blade of six points, bowed and folded along its midrib */
+function leafBatch() {
+  const pos = []
+  const uv = []
+  const idx = []
+  const shape = [
+    [0, 0],
+    [-0.5, 0.33],
+    [0.5, 0.33],
+    [-0.32, 0.7],
+    [0.32, 0.7],
+    [0, 1],
+  ] // [across × width, along × length]
+  return {
+    add(at, dir, up, len, wid, fold = 0.25) {
+      const T = dir.clone().normalize()
+      const S = new THREE.Vector3().crossVectors(T, up).normalize()
+      const N = new THREE.Vector3().crossVectors(S, T)
+      const base = pos.length / 3
+      for (const [a, l] of shape) {
+        const q = at
+          .clone()
+          .addScaledVector(T, l * len)
+          .addScaledVector(S, a * wid)
+          .addScaledVector(N, -Math.abs(a) * wid * fold + Math.sin(Math.PI * l) * len * 0.06)
+        pos.push(q.x, q.y, q.z)
+        uv.push(a + 0.5, l)
+      }
+      idx.push(base, base + 2, base + 1, base + 1, base + 2, base + 4, base + 1, base + 4, base + 3, base + 3, base + 4, base + 5)
+    },
+    geometry() {
+      const g = new THREE.BufferGeometry()
+      g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
+      g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2))
+      g.setIndex(idx)
+      g.computeVertexNormals()
+      return g
+    },
+  }
+}
+
+/**
+ * A blade grown along a curving midrib: rows from base to tip, `half(u)` the half-width, the halves folded back from
+ * the face (`fold`), the midrib arching toward the face normal N by `arch` (radians in all) and twisting about itself
+ * by `twist`; `ripple` waves the margins. T, N: the start direction and face normal (orthogonal). UVs: across, along.
+ */
+function blade({ from, T: T0, N: N0, len, half, fold, arch, twist = 0, ripple = 0, rows = 18, cols = 6, phase = 0 }) {
+  let T = T0.clone().normalize()
+  let N = N0.clone().normalize()
+  let S = new THREE.Vector3().crossVectors(N, T)
+  const C = from.clone()
+  const pos = []
+  const uv = []
+  const idx = []
+  const du = 1 / rows
+  for (let i = 0; i <= rows; i++) {
+    const u = i / rows
+    const hw = half(u)
+    for (let j = 0; j <= cols; j++) {
+      const v = (j / cols) * 2 - 1
+      const q = C.clone()
+        .addScaledVector(S, v * hw)
+        .addScaledVector(N, -Math.abs(v) * hw * fold + ripple * Math.sin(u * 13 + v * 1.7 + phase) * Math.abs(v) ** 2)
+      pos.push(q.x, q.y, q.z)
+      uv.push((v + 1) / 2, u)
+    }
+    // step on: the midrib bends toward N (more toward the tip) and twists
+    const a = arch * du * (0.3 + 1.4 * u)
+    const T2 = T.clone().multiplyScalar(Math.cos(a)).addScaledVector(N, Math.sin(a))
+    N = N.clone().multiplyScalar(Math.cos(a)).addScaledVector(T, -Math.sin(a))
+    T = T2
+    const b = twist * du
+    const N2 = N.clone().multiplyScalar(Math.cos(b)).addScaledVector(S, Math.sin(b))
+    S = S.clone().multiplyScalar(Math.cos(b)).addScaledVector(N, -Math.sin(b))
+    N = N2
+    C.addScaledVector(T, len * du)
+  }
+  for (let i = 0; i < rows; i++)
+    for (let j = 0; j < cols; j++) {
+      const a = i * (cols + 1) + j
+      const b = a + cols + 1
+      idx.push(a, b, a + 1, a + 1, b, b + 1)
+    }
+  const g = new THREE.BufferGeometry()
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2))
+  g.setIndex(idx)
+  g.computeVertexNormals()
+  return g
+}
+
+/**
+ * Bird of paradise (Strelitzia): long petioles fanning up out of the pebbles, sheathed at the base, each ending in a
+ * broad paddle-shaped blade with a pale midrib, its halves folded into a shallow V, arching over and twisting a
+ * little. The fan stands along x (leaning up to `lean[0]`° toward -x and `lean[1]`° toward +x); most blades face and
+ * arch toward +z.
+ */
+function birdOfParadise(seed, y0, lean = [24, 32]) {
+  const r = rand(seed)
+  const DEG = Math.PI / 180
+  const g = G('Bird_Of_Paradise')
+  const n = 9
+  for (let k = 0; k < n; k++) {
+    const side = (k / (n - 1)) * 2 - 1
+    const tilt = (side * (side < 0 ? lean[0] : lean[1]) + (r() - 0.5) * 8) * DEG
+    const fore = (r() - 0.25) * 30 * DEG
+    const D = V(Math.sin(tilt), Math.cos(tilt), Math.sin(fore)).normalize()
+    const stem = 0.3 + 0.2 * (1 - Math.abs(side)) + r() * 0.08
+    const b = V((r() - 0.5) * 0.04, y0 - 0.02, (r() - 0.5) * 0.03)
+    const tip = b.clone().addScaledVector(D, stem)
+    const mid = b.clone().addScaledVector(D, stem * 0.5).add(V(side * 0.012, 0, 0.008))
+    g.add(M(tube([b.toArray(), mid.toArray(), tip.toArray()], 0.0078, 20, 6), 'stem'))
+    g.add(M(tube([b.toArray(), b.clone().addScaledVector(D, 0.06).toArray(), b.clone().addScaledVector(D, 0.11).toArray()], 0.011, 6, 8), 'stem'))
+    const face = r() < 0.75 ? 1 : -1
+    const N = V(0, 0, face).addScaledVector(D, -D.z * face).normalize()
+    const len = 0.46 + r() * 0.12 + (1 - Math.abs(side)) * 0.06
+    const wide = 0.17 + r() * 0.04
+    const geo = blade({
+      from: tip,
+      T: D,
+      N,
+      len,
+      half: (u) => (wide / 2) * Math.sin(Math.PI * Math.min(1, u ** 0.75)) ** 0.55,
+      fold: 0.16,
+      arch: (15 + Math.abs(side) * 40 + r() * 20) * DEG,
+      twist: (r() - 0.5) * 50 * DEG,
+      ripple: 0.004,
+      phase: r() * 6,
+    })
+    g.add(M(geo, 'birdLeaf'))
+  }
+  return g
+}
+
+/**
+ * Olive tree: a slim leaning trunk, branches forking twice into twigs, small narrow grey-green leaves in pairs (each
+ * pair crossing the last), some showing their silvery undersides. Growth steers away from the `box` limits
+ * ([xmin, xmax, zmin, zmax], planter-local) so the crown keeps off the wall and the desk.
+ */
+function oliveTree(seed, y0, box) {
+  const r = rand(seed)
+  const g = G('Olive_Tree')
+  const leaves = { oliveLeaf: leafBatch(), oliveLeafPale: leafBatch() }
+  const steer = (p, d) => {
+    if ((p.x < box[0] && d.x < 0) || (p.x > box[1] && d.x > 0)) d.x *= -0.6
+    if ((p.z < box[2] && d.z < 0) || (p.z > box[3] && d.z > 0)) d.z *= -0.6
+  }
+  const leavesAlong = (curve, len, from) => {
+    const n = Math.max(1, Math.floor((len * (1 - from)) / 0.015))
+    for (let i = 0; i <= n; i++) {
+      const t = from + ((1 - from) * i) / n
+      const p = curve.getPoint(t)
+      const T = curve.getTangent(t)
+      const side = new THREE.Vector3().crossVectors(T, i % 2 ? V(1, 0, 0) : V(0, 0, 1)).normalize()
+      for (const sgn of [-1, 1]) {
+        const d = T.clone()
+          .multiplyScalar(0.6)
+          .addScaledVector(side, sgn)
+          .add(V(0, -0.2 - r() * 0.35, 0))
+          .normalize()
+        const L = 0.055 + r() * 0.03
+        ;(r() < 0.3 ? leaves.oliveLeafPale : leaves.oliveLeaf).add(p, d, V((r() - 0.5) * 0.8, 1, (r() - 0.5) * 0.8), L, L * (0.17 + r() * 0.05), 0.3)
+      }
+    }
+  }
+  const branch = (start, dir, len, radius, depth) => {
+    const pts = [start.clone()]
+    const d = dir.clone()
+    const steps = 5
+    for (let i = 0; i < steps; i++) {
+      d.add(V((r() - 0.5) * 0.4, 0.06, (r() - 0.5) * 0.4)).normalize()
+      steer(pts[pts.length - 1], d)
+      d.normalize()
+      pts.push(pts[pts.length - 1].clone().addScaledVector(d, len / steps))
+    }
+    g.add(M(tube(pts.map((q) => q.toArray()), radius, steps * 4, depth > 0 ? 5 : 4), 'oliveBark'))
+    const curve = new THREE.CatmullRomCurve3(pts)
+    leavesAlong(curve, len, depth > 1 ? 0.3 : 0.05)
+    if (depth > 0) {
+      const forks = 2 + Math.floor(r() * 2)
+      for (let k = 0; k < forks; k++) {
+        const t = 0.35 + (k / forks) * 0.5 + r() * 0.1
+        const nd = curve.getTangent(t).add(V((r() - 0.5) * 1.4, 0.2, (r() - 0.5) * 1.4)).normalize()
+        branch(curve.getPoint(t), nd, len * (0.42 + r() * 0.22), radius * 0.62, depth - 1)
+      }
+    }
+  }
+  const trunk = [
+    [0, y0 - 0.03, 0],
+    [0.015, y0 + 0.15, 0.012],
+    [-0.008, y0 + 0.3, 0.03],
+    [0.012, y0 + 0.44, 0.04],
+  ]
+  g.add(M(tube(trunk, 0.011, 24, 6), 'oliveBark'))
+  const tc = new THREE.CatmullRomCurve3(trunk.map((q) => V(...q)))
+  for (let k = 0; k < 6; k++) {
+    const a = k * 2.4 + r() * 0.6
+    branch(tc.getPoint(0.6 + (k / 6) * 0.4), V(Math.cos(a) * 0.5, 1, Math.sin(a) * 0.5).normalize(), 0.32 + r() * 0.16, 0.0045, 2)
+  }
+  for (const [mat, b] of Object.entries(leaves)) g.add(M(b.geometry(), mat))
+  return g
+}
+
+/** a small spiky rosette (yucca-like): stiff channelled sword leaves curving up and out from the centre */
+function spikyRosette(seed, y0) {
+  const r = rand(seed)
+  const DEG = Math.PI / 180
+  const g = G('Rosette')
+  const n = 15
+  for (let k = 0; k < n; k++) {
+    const az = k * 2.39996 + r() * 0.4
+    const t = k / n // outer leaves first, inner (more upright) last
+    const elev = (50 - t * 40 + (r() - 0.5) * 10) * DEG
+    const T = V(Math.sin(elev) * Math.cos(az), Math.cos(elev), Math.sin(elev) * Math.sin(az))
+    const S = V(-Math.sin(az), 0, Math.cos(az))
+    const up = new THREE.Vector3().crossVectors(S, T) // the leaf's upper (inner) face
+    const wid = 0.034 + r() * 0.012
+    const geo = blade({
+      from: V(Math.cos(az) * 0.008, y0 - 0.01, Math.sin(az) * 0.008),
+      T,
+      N: up.clone().negate(), // arch outward, away from the upper face
+      len: 0.2 + r() * 0.06 + t * 0.05,
+      half: (u) => (wid / 2) * Math.min(1, 0.55 + u * 4) * (1 - u) ** 0.9,
+      fold: 0.7, // channelled
+      arch: (10 + (1 - t) * 25 + r() * 10) * DEG,
+      rows: 8,
+      cols: 2,
+    })
+    g.add(M(geo, 'agaveLeaf'))
+  }
+  return g
+}
+
+/**
+ * The plant corner (reference photo): a tall egg-shaped stone planter with a bird of paradise, a low pebble planter
+ * with an olive tree behind it and a small one with a spiky rosette in front, all on white pebbles.
+ * Origin on the floor; x along the back wall, z out into the room.
+ */
+function stonePlanters() {
+  const parts = G('Stone_Planters_Parts')
+  const place = (planter, plant, x, z, ry) => parts.add(at(G('Planter_Set', planter.group, plant), x, 0, z, ry))
+  const tall = stonePlanter({ rx: 0.18, rz: 0.16, h: 0.6, cut: 0.6, egg: 0.16, tilt: -0.22, seed: 21 })
+  place(tall, birdOfParadise(1201, tall.bed, [14, 30]), -0.25, -0.02, 8)
+  const low = stonePlanter({ rx: 0.24, rz: 0.17, h: 0.3, cut: 0.42, egg: 0.05, seed: 22 })
+  place(low, oliveTree(1202, low.bed, [-0.2, 0.2, -0.12, 0.28]), 0.25, -0.1, -6)
+  const small = stonePlanter({ rx: 0.13, rz: 0.11, h: 0.22, cut: 0.45, egg: 0.08, seed: 23, seg: [44, 36] })
+  place(small, spikyRosette(1203, small.bed), -0.01, 0.28, 20)
+  return G('Stone_Planters', bake(parts))
 }
 
 /** black mesh office chair (after the reference): mesh back in a black frame, padded seat, adjustable arms. Front = -z */
@@ -1350,70 +1696,66 @@ function slouch(geo, amp, normals = true) {
   return geo
 }
 
-/**
- * A bean bag (after the reference photos): a soft, squashed ball resting on the floor — the fill slumps outward low
- * down, a hollow is pressed into the seat (toward the front, -z), the back rides up behind it, and creases radiate
- * from the hollow's rim. `r` radius, `h` height; `seat` = { w, d, f (how far forward), depth }; `back` = how much the
- * back rises. UVs tile the fabric.
- */
-function beanBag({ r, h, seat, back, mat, seed, name = 'Bean_Bag' }) {
-  const rnd = rand(seed)
-  const creases = Array.from({ length: 9 }, () => [rnd() * Math.PI * 2, 0.5 + rnd()])
-  const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a))
-  const geo = new THREE.SphereGeometry(1, 96, 64)
-  const p = geo.attributes.position
-  for (let i = 0; i < p.count; i++) {
-    const x = p.getX(i)
-    const y = p.getY(i)
-    const z = p.getZ(i)
-    const low = (1 - y) / 2 // 0 top → 1 bottom
-    const slump = 1 + 0.16 * Math.sin(Math.PI * Math.min(1, low * 1.25))
-    let X = x * r * slump
-    let Z = z * r * slump
-    let Y = ((y + 1) / 2) * h
-    if (y < -0.8) Y *= 0.35 + 0.65 * ((y + 1) / 0.2) // flattened where it sits on the floor
-    const sx = X / (r * seat.w)
-    const sz = (Z + r * seat.f) / (r * seat.d)
-    const dip = Math.exp(-(sx * sx + sz * sz))
-    if (y > 0) Y -= dip * h * seat.depth * smoothstep(0, 0.85, y)
-    if (z > 0 && y > 0) Y += back * h * z * y * (1 - dip)
-    // creases round the hollow's rim
-    const a = Math.atan2(sz, sx)
-    let crease = 0
-    for (const [ca, cw] of creases) crease += cw * Math.exp(-((wrap(a - ca) / 0.09) ** 2))
-    const rim = Math.exp(-(((Math.hypot(sx, sz) - 1.05) / 0.45) ** 2)) * (y > -0.2 ? 1 : 0.2)
-    const k = 1 - crease * rim * 0.035
-    X *= k
-    Z *= k
-    Y -= crease * rim * 0.012
-    // a little unevenness in the fill
-    const lump = 0.012 * lumps(X * 2, Y * 2, Z * 2)
-    p.setXYZ(i, X * (1 + lump), Math.max(0, Y + lump * 0.5), Z * (1 + lump))
-  }
-  geo.computeVertexNormals()
-  geo.attributes.uv.array.forEach((v, i, arr) => (arr[i] = i % 2 ? v * 4 : v * 10))
-  return M(geo, mat, name)
-}
-/** a puffy square pillow (corners pinched); `mat` its fabric */
-function pillowGeo(w = 0.46, h = 0.44, t = 0.15) {
-  const g = new THREE.BoxGeometry(w, h, t, 14, 14, 4)
+/** a puffy square pillow with piped edges (corners pinched); returns its geometry + the piping, one material */
+function pillow(w, h, t, mat) {
+  const g = new THREE.BoxGeometry(w, h, t, 16, 16, 4)
   const p = g.attributes.position
+  const puff = (u, v) => Math.max(0.05, 1 - 0.6 * (u ** 4 + v ** 4))
   for (let i = 0; i < p.count; i++) {
     const u = p.getX(i) / (w / 2)
     const v = p.getY(i) / (h / 2)
-    p.setZ(i, p.getZ(i) * Math.max(0.05, 1 - 0.6 * (u ** 4 + v ** 4)))
+    p.setZ(i, p.getZ(i) * puff(u, v))
     p.setX(i, p.getX(i) * (1 - 0.05 * v * v))
     p.setY(i, p.getY(i) * (1 - 0.05 * u * u))
   }
   g.computeVertexNormals()
-  return slouch(g, 0.006)
+  const pg = G('Pillow')
+  pg.add(M(slouch(g, 0.006), mat))
+  // piping round the edge seam (it follows the same pinched outline)
+  const pts = []
+  const rc = 0.03
+  const corners = [
+    [w / 2 - rc, h / 2 - rc, 0],
+    [-w / 2 + rc, h / 2 - rc, Math.PI / 2],
+    [-w / 2 + rc, -h / 2 + rc, Math.PI],
+    [w / 2 - rc, -h / 2 + rc, (3 * Math.PI) / 2],
+  ]
+  for (const [cx, cy, a0] of corners)
+    for (let k = 0; k <= 6; k++) {
+      const a = a0 + (k / 6) * (Math.PI / 2)
+      const x = cx + Math.cos(a) * rc
+      const y = cy + Math.sin(a) * rc
+      pts.push(new THREE.Vector3(x * (1 - 0.05 * (y / (h / 2)) ** 2), y * (1 - 0.05 * (x / (w / 2)) ** 2), 0))
+    }
+  pg.add(M(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, true), 160, 0.0055, 8, true), mat))
+  return pg
 }
-/** chunky woven pouf (a squat round, braided) */
+/**
+ * Braided jute pouf (as they're made): rows of coiled braid up the sides, the outer braid rolling over the rounded
+ * shoulder, a flat spiral of braid across the top.
+ */
 function pouf(r = 0.27, h = 0.3) {
-  const prof = [[0, 0], [r * 0.82, 0], [r * 0.98, h * 0.18], [r, h * 0.5], [r * 0.96, h * 0.82], [r * 0.78, h], [r * 0.15, h * 0.96], [r * 0.12, h * 0.88], [0, h * 0.86]]
-  const g = lathe(prof, 48)
-  g.attributes.uv.array.forEach((v, i, arr) => (arr[i] = i % 2 ? v * 3 : v * 9))
-  return M(g, 'pouf', 'Pouf')
+  const g = G('Pouf')
+  const rope = 0.012
+  const step = rope * 1.85
+  const ring = (rr, y) => {
+    const geo = new THREE.TorusGeometry(rr, rope, 8, Math.max(24, Math.round(rr * 260))).rotateX(Math.PI / 2).translate(0, y, 0)
+    const len = 2 * Math.PI * rr
+    geo.attributes.uv.array.forEach((v, i, arr) => (arr[i] = i % 2 ? v : (v * len) / 0.03))
+    g.add(M(geo, 'pouf'))
+  }
+  // sides: a slight belly, the bottom row tucked in
+  for (let y = rope; y < h - 2.2 * rope; y += step) {
+    const t = y / h
+    ring(r * (0.9 + 0.1 * Math.sin(Math.PI * Math.min(1, t * 1.15))), y)
+  }
+  // the shoulder rolls over
+  ring(r * 0.95, h - 1.6 * rope)
+  ring(r * 0.88, h - 0.7 * rope)
+  // the top: a flat spiral, a gentle dome
+  for (let rr = r * 0.8; rr > rope * 1.2; rr -= step) ring(rr, h - 0.5 * rope + 0.006 * (1 - rr / r))
+  g.add(M(cyl(rope * 1.3, rope * 1.3, rope * 1.6, 12).translate(0, h - 0.4 * rope + 0.006, 0), 'pouf'))
+  return bake(g)
 }
 /** small round walnut side table: a ceramic vase, two candles and a stack of coasters on top */
 function sideTable() {
@@ -1437,19 +1779,240 @@ function sideTable() {
   g.add(bake(parts))
   return g
 }
-/** the lounge on the front wall (after the reference photos): two bean bags with pillows, a pouf, a side table */
+/* ── the curved velvet sofa ───────────────────────────────────────────────────────────────── */
+// Upholstery is modelled in "sofa space": s runs along the sofa's back line, w inward from it, y up. Each soft piece is
+// a signed distance field there (negative inside); `softBlock` meshes it and `bendPiece` wraps sofa space round an arc,
+// so the seat modules become wedges and the back's channels fan out the way they do on a real curved sofa.
+
+/** signed distance to the rectangle [s0, s1] × [w0, w1], corners rounded by rc */
+function sdRect(s, w, s0, s1, w0, w1, rc = 0) {
+  const ds = Math.abs(s - (s0 + s1) / 2) - (s1 - s0) / 2 + rc
+  const dw = Math.abs(w - (w0 + w1) / 2) - (w1 - w0) / 2 + rc
+  return Math.hypot(Math.max(ds, 0), Math.max(dw, 0)) + Math.min(Math.max(ds, dw), 0) - rc
+}
+/** plan of a seat module: a rounded rectangle whose ends may each be a full half-circle (a chaise lobe) */
+function modulePlan({ s: [s0, s1], w: [w0, w1], lobes = [false, false] }, rc = 0.06) {
+  const hw = (w1 - w0) / 2
+  const wc = (w0 + w1) / 2
+  const a = lobes[0] ? s0 + hw : s0
+  const b = lobes[1] ? s1 - hw : s1
+  return (s, w) => {
+    let d = sdRect(s, w, lobes[0] ? a - 1 : s0, lobes[1] ? b + 1 : s1, w0, w1, rc)
+    if (lobes[0]) d = Math.min(Math.max(d, a - s), Math.hypot(s - a, w - wc) - hw)
+    if (lobes[1]) d = Math.min(Math.max(d, s - b), Math.hypot(s - b, w - wc) - hw)
+    return d
+  }
+}
+/** a plan (distance d2) pulled up from y0 to y1, its top edges rounded by rTop and bottom edges by rBot */
+function extrudePlan(d2, y, y0, y1, rTop, rBot) {
+  const yc = (y0 + y1) / 2
+  const r = y > yc ? rTop : rBot
+  const ex = d2 + r
+  const ey = Math.abs(y - yc) - (y1 - y0) / 2 + r
+  return Math.min(Math.max(ex, ey), 0) + Math.hypot(Math.max(ex, 0), Math.max(ey, 0)) - r
+}
+const smin = (a, b, k) => {
+  const h = Math.max(k - Math.abs(a - b), 0) / k
+  return Math.min(a, b) - h * h * k * 0.25
+}
+
+/**
+ * Mesh a soft piece given as a distance field f(s, y, w). A box grid spans the bounds `lo`..`hi` ([s, y, w]); each
+ * grid point is clamped into the `core` box (well inside the piece) and the ray from there out through the grid
+ * point is walked to the surface, so flat faces come out as even grids and every rounded edge gets the rows of the
+ * band between core and bounds (a third of them). `uniform` axes are spread evenly over the bounds instead (the
+ * back's channels need rows exactly on their seams). Positions stay in sofa space.
+ */
+function softBlock(f, { lo, hi, core, seg, uniform = [] }) {
+  const geo = new THREE.BoxGeometry(2, 2, 2, ...seg)
+  const p = geo.attributes.position
+  const q = 0.3
+  const along = (a, k) => {
+    if (uniform[k]) return lo[k] + ((a + 1) / 2) * (hi[k] - lo[k])
+    const [c0, c1] = core[k]
+    const cm = (c0 + c1) / 2
+    const t = Math.abs(a)
+    const ce = a < 0 ? c0 : c1
+    const e = a < 0 ? lo[k] : hi[k]
+    return t <= 1 - q ? cm + (ce - cm) * (t / (1 - q)) : ce + (e - ce) * ((t - 1 + q) / q)
+  }
+  const P = [0, 0, 0]
+  const Q = [0, 0, 0]
+  let stray = 0
+  for (let i = 0; i < p.count; i++) {
+    const g = [p.getX(i), p.getY(i), p.getZ(i)]
+    for (let k = 0; k < 3; k++) {
+      P[k] = along(g[k], k)
+      Q[k] = Math.min(core[k][1], Math.max(core[k][0], P[k]))
+    }
+    const len = Math.hypot(P[0] - Q[0], P[1] - Q[1], P[2] - Q[2])
+    const dir = [0, 1, 2].map((k) => (P[k] - Q[k]) / len)
+    const F = (t) => f(Q[0] + dir[0] * t, Q[1] + dir[1] * t, Q[2] + dir[2] * t)
+    if (F(0) >= 0) stray++
+    // walk out to the first point outside, then bisect
+    let t0 = 0
+    let t1 = 0
+    const tMax = len * 1.6 + 0.08
+    while (t1 < tMax && F(t1) < 0) [t0, t1] = [t1, t1 + 0.004]
+    for (let k = 0; k < 24; k++) {
+      const tm = (t0 + t1) / 2
+      if (F(tm) < 0) t0 = tm
+      else t1 = tm
+    }
+    const t = (t0 + t1) / 2
+    p.setXYZ(i, Q[0] + dir[0] * t, Q[1] + dir[1] * t, Q[2] + dir[2] * t)
+  }
+  if (stray) console.warn(`softBlock: ${stray} rays start outside the piece`)
+  // which way each vertex's face looks (BoxGeometry builds ±s, ±y, ±w faces in that order): 0 s, 1 y, 2 w
+  const [ns, ny, nw] = seg
+  const nS = 2 * (nw + 1) * (ny + 1)
+  const nY = nS + 2 * (ns + 1) * (nw + 1)
+  geo.userData.side = (i) => (i < nS ? 0 : i < nY ? 1 : 2)
+  return geo
+}
+
+/** vertex normals averaged over every face meeting at a position (the box's duplicated edge vertices included) */
+function smoothNormals(geo) {
+  const p = geo.attributes.position
+  const idx = geo.index.array
+  const keys = Array.from({ length: p.count }, (_, i) => `${Math.round(p.getX(i) * 1e5)},${Math.round(p.getY(i) * 1e5)},${Math.round(p.getZ(i) * 1e5)}`)
+  const sum = new Map()
+  const a = new THREE.Vector3()
+  const b = new THREE.Vector3()
+  const c = new THREE.Vector3()
+  for (let t = 0; t < idx.length; t += 3) {
+    a.fromBufferAttribute(p, idx[t])
+    b.fromBufferAttribute(p, idx[t + 1])
+    c.fromBufferAttribute(p, idx[t + 2])
+    const n = c.sub(b).cross(a.sub(b)) // area-weighted
+    for (let k = 0; k < 3; k++) {
+      const key = keys[idx[t + k]]
+      if (sum.has(key)) sum.get(key).add(n)
+      else sum.set(key, n.clone())
+    }
+  }
+  const nrm = new Float32Array(p.count * 3)
+  for (let i = 0; i < p.count; i++) {
+    const n = sum.get(keys[i]).clone().normalize()
+    nrm.set([n.x, n.y, n.z], i * 3)
+  }
+  geo.setAttribute('normal', new THREE.BufferAttribute(nrm, 3))
+}
+
+/** wrap a piece from sofa space round the arc; fabric UVs in metres / `tile` (arc length measured where it lies) */
+function bendPiece(geo, toWorld, R0, tile = 0.5) {
+  const p = geo.attributes.position
+  const uv = geo.attributes.uv
+  const side = geo.userData.side
+  for (let i = 0; i < p.count; i++) {
+    const s = p.getX(i)
+    const y = p.getY(i)
+    const w = p.getZ(i)
+    const arc = (s * (R0 - w)) / R0
+    const k = side(i)
+    uv.setXY(i, (k === 0 ? w : arc) / tile, (k === 1 ? w : y) / tile)
+    const [x, z] = toWorld(s, w)
+    p.setXYZ(i, x, y, z)
+  }
+  // sofa space → world mirrors handedness: turn the triangles back to face outward
+  const idx = geo.index.array
+  for (let i = 0; i < idx.length; i += 3) [idx[i + 1], idx[i + 2]] = [idx[i + 2], idx[i + 1]]
+  smoothNormals(geo)
+  return geo
+}
+
+/**
+ * The curved sofa (after the reference photo): a deep green velvet sectional bowed round an arc in the corner. A
+ * channel-tufted back (vertical rolls that fan out with the curve and wrap over the top, its ends scrolling down)
+ * stands behind wedge-shaped seat modules — each a domed cushion on an upholstered base — and both ends round off into
+ * chaise lobes, the left one running on along the wall without a back; all of it on a dark recessed plinth, with two
+ * cream pillows. `c` is the arc's centre, `r` the back line's radius, `from` → `to` / `backFrom` angles in degrees
+ * (0 = +x, 90 = +z), `depth` from the back line to the seat front.
+ */
+function curvedSofa() {
+  const { c: [cx, cz], r: R0, from, to, backFrom, depth: Dw } = L.lounge.sofa
+  const rad = Math.PI / 180
+  const S = R0 * (from - to) * rad
+  const toWorld = (s, w) => {
+    const th = from * rad - s / R0
+    return [cx + (R0 - w) * Math.cos(th), cz + (R0 - w) * Math.sin(th)]
+  }
+  const sb0 = R0 * (from - backFrom) * rad
+  const sb1 = S - 0.12
+  const parts = G('Sofa_Parts')
+  const add = (f, opts, mat = 'velvetGreen') => parts.add(M(bendPiece(softBlock(f, opts), toWorld, R0), mat))
+
+  // seat modules: the left chaise, then three wedges, the last rounding off into the right chaise
+  const third = (S - sb0) / 3
+  const modules = [
+    { s: [0, sb0], w: [0.02, Dw], lobes: [true, false] },
+    { s: [sb0, sb0 + third], w: [0.22, Dw] },
+    { s: [sb0 + third, sb0 + 2 * third], w: [0.22, Dw] },
+    { s: [sb0 + 2 * third, S], w: [0.22, Dw], lobes: [false, true] },
+  ]
+  const plans = modules.map((m) => modulePlan(m))
+  modules.forEach((m, i) => {
+    const plan = plans[i]
+    const [s0, s1] = m.s
+    const [w0, w1] = m.w
+    const hw = (w1 - w0) / 2
+    const cs = [m.lobes?.[0] ? s0 + hw : s0 + 0.1, m.lobes?.[1] ? s1 - hw : s1 - 0.1]
+    const cw = [w0 + 0.1, w1 - 0.1]
+    const ns = Math.round(((s1 - s0) / 0.85) * 32)
+    // the upholstered base, a little inset under the cushion
+    add((s, y, w) => extrudePlan(plan(s, w) + 0.012, y, 0.035, 0.285, 0.03, 0.02), { lo: [s0, 0.035, w0], hi: [s1, 0.285, w1], core: [cs, [0.09, 0.23], cw], seg: [ns, 6, 16] })
+    // the seat cushion: crowned (it rises quickly from the edges and stays full across the middle), softly uneven
+    const crown = (s, w) => 0.02 * (1 - Math.exp(Math.min(0, plan(s, w)) / 0.08))
+    add((s, y, w) => extrudePlan(plan(s, w), y, 0.255, 0.44 + crown(s, w), 0.07, 0.03) - 0.003 * lumps(s * 4 + i, y * 4, w * 4), { lo: [s0, 0.255, w0], hi: [s1, 0.465, w1], core: [cs, [0.31, 0.39], cw], seg: [ns, 10, 20] })
+  })
+
+  // the back: vertical channels (a rounded roll each, stitched into a tight seam between), the face leaning back
+  // above the seat, the ends scrolling down; the outside is a plain panel
+  const nch = Math.round((sb1 - sb0) / 0.19)
+  const chW = (sb1 - sb0) / nch
+  const rnd = rand(1101)
+  const fullness = Array.from({ length: nch + 1 }, () => 0.85 + rnd() * 0.3)
+  const backTop = (s) => {
+    const t = Math.max(0, (0.45 - Math.min(s - sb0, sb1 - s)) / 0.45)
+    return 0.58 + 0.24 * Math.sqrt(Math.max(0, 1 - t * t))
+  }
+  const backPlan = (s, w) => sdRect(s, w, sb0, sb1, 0, 0.25, 0.1)
+  add(
+    (s, y, w) => {
+      const top = backTop(s)
+      const lean = 1 - 0.32 * smoothstep(0.42, top, y)
+      const d = extrudePlan(backPlan(s, w / lean), y, 0.035, top, 0.09, 0.02)
+      const u = (s - sb0) / chW
+      const x = 2 * (u - Math.floor(u)) - 1
+      const roll = Math.max(0, 1 - x * x) ** 0.3 * fullness[Math.max(0, Math.min(nch, Math.floor(u)))]
+      return d - 0.034 * roll * smoothstep(0.02, 0.1, w)
+    },
+    { lo: [sb0, 0.035, 0], hi: [sb1, 0.84, 0.25], core: [[sb0 + 0.1, sb1 - 0.1], [0.15, 0.55], [0.08, 0.13]], seg: [nch * 10, 24, 10], uniform: [true, true, false] },
+  )
+
+  // the plinth: a dark recess under it all
+  // (modules overlap a little here, so the recess runs on unbroken under the seams between them)
+  const all = [...modules.map((m) => modulePlan({ ...m, s: [m.s[0] - (m.lobes?.[0] ? 0 : 0.06), m.s[1] + (m.lobes?.[1] ? 0 : 0.06)] })), backPlan]
+  const union = (s, w) => all.reduce((d, f) => smin(d, f(s, w), 0.06), Infinity)
+  add((s, y, w) => extrudePlan(union(s, w) + 0.045, y, 0, 0.04, 0.004, 0.002), { lo: [0.03, 0, 0.04], hi: [S - 0.03, 0.04, Dw - 0.04], core: [[0.5, S - 0.4], [0.01, 0.03], [0.3, 0.6]], seg: [90, 2, 8] }, 'blackMatte')
+
+  // two cream pillows leaning on the back (angle on the arc, lean, twist)
+  for (const [th, lean, twist] of [
+    [127, 19, 5],
+    [70, 16, -7],
+  ]) {
+    const r = R0 - 0.31
+    const ry = Math.atan2(Math.cos(th * rad), Math.sin(th * rad)) / rad
+    parts.add(at(pillow(0.46, 0.46, 0.15, 'pillowCream'), cx + r * Math.cos(th * rad), 0.66, cz + r * Math.sin(th * rad), ry, lean, twist))
+  }
+  return bake(parts)
+}
+/** the lounge on the front wall: the curved sofa round the walnut side table, the pouf across from it */
 function lounge() {
   const g = G('Lounge')
-  const { charcoal, cream, poufAt, table } = L.lounge
-  const big = G('Bean_Bag_Charcoal')
-  big.add(beanBag({ r: 0.6, h: 0.7, seat: { w: 0.85, d: 0.78, f: 0.2, depth: 0.42 }, back: 0.36, mat: 'beanCharcoal', seed: 1001, name: 'Bean_Bag_Charcoal_Body' }))
-  big.add(at(M(pillowGeo(0.44, 0.34, 0.13), 'pillowStripe'), 0.12, 0.5, 0.12, -18, 26, 6))
-  g.add(at(big, charcoal[0], 0, charcoal[1], charcoal[2]))
-  const small = G('Bean_Bag_Cream')
-  small.add(beanBag({ r: 0.46, h: 0.8, seat: { w: 0.85, d: 0.8, f: 0.3, depth: 0.32 }, back: 0.46, mat: 'beanCream', seed: 1002, name: 'Bean_Bag_Cream_Body' }))
-  small.add(at(M(pillowGeo(0.4, 0.38, 0.14), 'knitCream'), 0, 0.58, 0.08, 4, 24, -3))
-  g.add(at(small, cream[0], 0, cream[1], cream[2]))
-  g.add(at(pouf(), poufAt[0], 0, poufAt[1]))
+  const { poufAt, table } = L.lounge
+  g.add(G('Sofa', curvedSofa()))
+  g.add(at(pouf(), poufAt[0], poufAt[2] ?? 0, poufAt[1]))
   g.add(at(sideTable(), table[0], 0, table[1]))
   return g
 }
@@ -2057,7 +2620,7 @@ async function main() {
   if (L.bench) furniture.add(at(bench(), L.bench.x, 0, L.bench.z, 90))
   if (L.slatPanel) root.add(at(slatPanel(), L.slatPanel.x, 0, Z0 + 0.001))
   if (L.wallShelf) furniture.add(at(shelfPothos(1011), L.wallShelf.x, L.wallShelf.y, Z0 + 0.001))
-  if (L.monsteraStand) furniture.add(at(monsteraOnStand(1012), L.monsteraStand.x, 0, L.monsteraStand.z))
+  if (L.planters) furniture.add(at(stonePlanters(), L.planters.x, 0, L.planters.z))
   if (L.fig) furniture.add(at(fiddleFig(1013), L.fig.x, 0, L.fig.z))
   for (const [x, z, h] of L.snakes ?? []) furniture.add(at(snakePlant(1014 + Math.round(x * 10), h), x, 0, z))
   for (const rg of L.rugs ?? []) furniture.add(at(rugAt(rg), rg.x, 0, rg.z))
