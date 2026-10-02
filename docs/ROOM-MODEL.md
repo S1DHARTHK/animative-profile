@@ -15,14 +15,22 @@ Both come from the same generator. The rest of this page describes `room.glb`; `
   (`Ceiling_Soffit`) with a warm cove LED, twin recessed `Downlights` on the side walls, and LED lines at the floor.
   LED strips and downlight lenses are bright emissive bars; the light they throw is drawn by soft `ledWash` /
   `scallopWash` planes (the site renders them additively)
-* the workspace: a black `Slat_Panel` (with an abstract relief) standing off the back wall, LEDs behind its edges
+* the workspace: a light grey `Slat_Panel` (with a black abstract relief) standing off the back wall, LEDs behind its edges
   washing the wall in a warm halo; `Desk` — a walnut standing desk on a black frame; `Desk_Set` holds `Monitor` on a
   walnut `Monitor_Riser` (its centred 4:3 `Monitor_Screen` is where the site shows the resume; the `Light_Bar` on top
-  carries `Lamp_Light`), two `Speaker`s, a `Console`, `Keyboard`, `Mouse` on a `Desk_Mat`, a `Mug` and `Camera`;
-  a black mesh office `Chair` on a grey shag `Rug`; plants: a `Wall_Shelf` of trailing pothos, a `Monstera_Stand`,
-  a `Fiddle_Fig` and `Snake_Plant`s
-* the `Lounge` along the front wall (behind you as you face the desk): a charcoal and a cream `Bean_Bag` with pillows,
-  a braided `Pouf`, a walnut `Side_Table` (vase, candles) on a cream woven rug
+  carries `Lamp_Light`), two `Speaker`s, a glass-sided `PC_Tower` on the desk, `Keyboard`, `Mouse` on a `Desk_Mat`, a `Mug` and `Camera`;
+  a black mesh office `Chair` on a grey shag `Rug`; plants: a `Wall_Shelf` of trailing pothos, a `Fiddle_Fig`,
+  `Snake_Plant`s and, in the corner left of the desk, `Stone_Planters`. These are pebble-shaped cream stone planters
+  (sandy, pitted texture) topped with white pebbles. A tall egg holds a bird of paradise (broad arching blades on long
+  petioles), a low pebble holds a slim olive tree, and a small one holds a spiky rosette
+* the `Lounge` in the front-left corner (behind you as you face the desk): a curved `Sofa` in deep green velvet,
+  bowed round an arc. It has a channel-tufted back whose rolls fan out with the curve and whose ends scroll down. In
+  front of the back are wedge seat modules, each a domed cushion on an upholstered base. Both ends round off into
+  chaise lobes; the left one runs on along the wall, under the globe shelf, without a back. It all sits on a dark
+  recessed plinth, with two cream pillows. The walnut `Side_Table` (vase, candles) stands inside the curve and a
+  coiled braided-jute `Pouf` stands across from it, on a cream woven rug. The upholstery is meshed from distance
+  fields in a "sofa space" and then bent round the arc (`softBlock` / `bendPiece`). Fabrics carry a soft sheen
+  (`KHR_materials_sheen`)
 * `Globe_Shelf` — a spherical bookshelf on the left wall (curved shelves and meridian fins in honey oak, filled with
   books and two small framed photos)
 * `Balcony_Door` — French doors with sidelights in the left wall where the window was (its glass is `Window_1_Glass`),
