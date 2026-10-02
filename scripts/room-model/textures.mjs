@@ -422,5 +422,19 @@ export async function buildTextures(root) {
     T.corduroyN = await normalMap(512, (x, y) => wale(x / 512) * 2.2 + nap(x / 512, y / 512) * 0.2, 2)
   }
 
+  T.saberGlow = await fromPixels(
+    128,
+    512,
+    (u, v) => {
+      const x = (u - 0.5) / 0.5
+      const y = (v - 0.5) / 0.5
+      const glow = Math.exp(-((x / 0.16) ** 2)) + 0.5 * Math.exp(-((x / 0.5) ** 2))
+      const ends = smooth(Math.min(1, Math.max(0, (1 - Math.abs(y)) / 0.4)))
+      const g = Math.min(1, glow * ends) * 255
+      return [g, g, g, g]
+    },
+    { alpha: true, mime: 'image/png' },
+  )
+
   return T
 }
