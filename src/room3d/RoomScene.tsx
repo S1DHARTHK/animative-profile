@@ -4,7 +4,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { Bvh, useGLTF } from '@react-three/drei'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { findInteractives, type Interactive } from './interactives'
-import { measureRoom, type RoomGeometry } from './roomGeometry'
+import { measureRoom, modelTheme, type RoomGeometry } from './roomGeometry'
 import { room3d } from './store'
 
 // the room as photographed (public/models/room-small.glb); the enlarged room.glb works too
@@ -16,7 +16,9 @@ export interface RoomHandle {
   interactives: Interactive[]
 }
 
+// hover highlight: amber in the golden-hour room, a soft warm white at night
 const WARM = new THREE.Color('#ffcf9a')
+const SOFT = new THREE.Color('#fff0de')
 
 interface Glow {
   it: Interactive
@@ -31,6 +33,7 @@ export function RoomScene({ onReady }: { onReady: (room: RoomHandle) => void }) 
   const gl = useThree((s) => s.gl)
   const threeScene = useThree((s) => s.scene)
   const glows = useRef<Glow[]>([])
+  const glow = useMemo(() => (modelTheme(scene) === 'night' ? SOFT : WARM), [scene])
 
   const room = useMemo(() => {
     const geometry = measureRoom(scene)
@@ -106,7 +109,7 @@ export function RoomScene({ onReady }: { onReady: (room: RoomHandle) => void }) 
       const target = hovered === g.it.id ? 1 : 0
       if (Math.abs(g.h - target) < 0.001) continue
       g.h += (target - g.h) * k
-      for (const { m, emissive } of g.mats) m.emissive.copy(emissive).lerp(WARM, g.h * 0.16)
+      for (const { m, emissive } of g.mats) m.emissive.copy(emissive).lerp(glow, g.h * 0.16)
       for (const { o, base, dir } of g.lift) o.position.copy(base).addScaledVector(dir, g.h * 0.014)
     }
   })
