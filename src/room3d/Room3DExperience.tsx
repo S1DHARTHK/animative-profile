@@ -4,7 +4,7 @@ import gsap from 'gsap'
 import { Canvas } from '@react-three/fiber'
 import { RoomScene, type RoomHandle } from './RoomScene'
 import { CameraRig } from './CameraRig'
-import { PostFX, WarmLights } from './Look'
+import { PostFX, WarmLights, themeOf } from './Look'
 import { CameraRoll, HoverLabel, MonitorScreen, PcOverlay, closeContent, openPhoto } from './Content'
 import { isFrozen, room3d, shared, useRoom3D } from './store'
 import { controls, journey } from '../animation/store'
@@ -47,6 +47,12 @@ export default function Room3DExperience() {
   useEffect(() => {
     if (ready) journey.set({ ready: true })
   }, [ready])
+  // the page chrome follows the room's look (the dark room gets neutral, cool-white UI)
+  useEffect(() => {
+    if (!room) return
+    document.documentElement.classList.toggle('theme-night', themeOf(room) === 'night')
+    return () => document.documentElement.classList.remove('theme-night')
+  }, [room])
 
   // dev/debug hook for automated checks: camera pose + where each object is on screen
   useEffect(() => {
