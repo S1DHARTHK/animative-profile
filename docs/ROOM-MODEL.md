@@ -4,17 +4,34 @@ Two complete 3D models of the room (all four walls, floor, ceiling and every obj
 
 | File | Room | Used by the website |
 | --- | --- | --- |
-| `public/models/room-small.glb` | **as photographed**: 3.3 m × 4.0 m, 2.9 m ceiling, one window, desk standing off the back wall | **yes** (desktop 3D portfolio) |
+| `public/models/room-small.glb` | the photographed room's shell (3.3 m × 4.0 m, 2.9 m ceiling), with balcony doors instead of the window, fitted out as a **modern room at night** | **yes** (desktop 3D portfolio) |
 | `public/models/room.glb` | enlarged: 7 m × 9 m, 3.4 m ceiling, two windows, bench and two extra frames | no (kept) |
 
-Both come from the same generator with the same objects and node names; only the layout differs. The rest of this
-page describes `room.glb`; `room-small.glb` is identical in structure except: no `Bench`, one `Window_1`, a single
-frame — `Frame_family` (the family photograph, `public/photos/family.webp`) centred on the back wall — instead of the
-seven, no `Monstera`, no `Rug`, `Wall_Shelves` (four wooden shelves on black
-rails: wire globe, books, a small picture, woven box, vase, binders) and a modern desk setup against the back wall:
-`Desk` is a wood slab on black steel end frames with a hanging drawer, `Chair` the teak & cane chair (as in room.glb), and `Desk_Set` holds `Monitor` — a curved ultrawide with a light bar, whose centred 4:3 `Monitor_Screen` is where
-the site shows the resume (`Lamp_Light` sits under the light bar) — plus `Keyboard`, `Mouse`, `Desk_Mat`, `Gamepad`,
-`Mug`, `Notebook` and `Camera`. The site's caption for `Frame_family` is `roomFrames.family` in `src/content/photos.ts`.
+Both come from the same generator. The rest of this page describes `room.glb`; `room-small.glb` shares its shell
+(`Architecture`, `Door`, `Outside_Garden`) but is the **modern room at night** (`theme: 'night'` in the
+`Room` node's extras — the site switches to its night look from it):
+
+* warm light greige paint (fine roller stipple), a lighter ceiling, grey carpet; `Fitout` adds a tray ceiling
+  (`Ceiling_Soffit`) with a warm cove LED and twin recessed `Downlights`, a `Wall_Panel` along the back wall with an LED
+  on its top edge, and LED lines at the floor. LED strips and downlight lenses are bright emissive bars; the light they
+  throw is drawn by soft `ledWash` / `scallopWash` planes (the site renders them additively)
+* `Desk` — minimal white top on a black frame, against the back wall; `Desk_Set` holds `Monitor` (flat, black & white
+  wallpaper; its centred 4:3 `Monitor_Screen` is where the site shows the resume), `Keyboard`, `Mouse`, `Camera`, and
+  a small `PC_Tower` under the desk
+* `Chair` — a black & white racing-style gaming chair, beside the desk (its tall back stays out of the camera's path)
+* `Floating_Shelves` — two black shelves with LED underglow (terrarium, spheres, books, a small plant); the light under
+  the lower one is `Lamp_Light`, aimed at the desk
+* `Sofa` — a charcoal corduroy bean-bag loveseat against the front wall, facing the desk
+* `Globe_Shelf` — a spherical bookshelf on the left wall (curved shelves and meridian fins in honey oak, filled with
+  books and two small framed photos)
+* `Balcony_Door` — French doors with sidelights in the left wall where the window was (its glass is `Window_1_Glass`),
+  sheer voile `Sheer_Curtains` tied back either side, and outside a `Balcony` terrace (stone floor, white balustrade,
+  potted cypress and shrubs)
+* a `Cluster_Pendant` beside the globe shelf — five rattan balls on jute ropes
+  with Edison bulbs and trailing pothos; the room's light (`Room_Fill`) glows inside it (no ceiling fan or centre
+  pendant); a faint cool moon as `Sun`, the night garden outside
+* one frame — `Frame_family` (the family photograph, `public/photos/family.webp`; the site's caption is
+  `roomFrames.family` in `src/content/photos.ts`); no bench, plants, rug, bookshelf, postcards or sketches
 
 | | |
 | --- | --- |
