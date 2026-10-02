@@ -11,16 +11,16 @@ Both come from the same generator. The rest of this page describes `room.glb`; `
 (`Architecture`, `Door`, `Outside_Garden`) but is the **modern room at night** (`theme: 'night'` in the
 `Room` node's extras — the site switches to its night look from it):
 
-* warm light greige paint (fine roller stipple), a lighter ceiling, grey carpet; `Fitout` adds a tray ceiling
-  (`Ceiling_Soffit`) with a warm cove LED and twin recessed `Downlights`, a `Wall_Panel` along the back wall with an LED
-  on its top edge, and LED lines at the floor. LED strips and downlight lenses are bright emissive bars; the light they
+* dark olive-grey paint (fine roller stipple), a dark ceiling, grey carpet; `Fitout` adds a tray ceiling
+  (`Ceiling_Soffit`) with a warm cove LED, twin recessed `Downlights` on the side walls, and LED lines at the floor. LED strips and downlight lenses are bright emissive bars; the light they
   throw is drawn by soft `ledWash` / `scallopWash` planes (the site renders them additively)
-* `Desk` — minimal white top on a black frame, against the back wall; `Desk_Set` holds `Monitor` (flat, black & white
-  wallpaper; its centred 4:3 `Monitor_Screen` is where the site shows the resume), `Keyboard`, `Mouse`, `Camera`, and
-  a small `PC_Tower` under the desk
-* `Chair` — a black & white racing-style gaming chair, beside the desk (its tall back stays out of the camera's path)
-* `Floating_Shelves` — two black shelves with LED underglow (terrarium, spheres, books, a small plant); the light under
-  the lower one is `Lamp_Light`, aimed at the desk
+* the gaming corner: `Desk` — an L-shaped wooden desk along the back wall, returning along the right wall (end panel,
+  drawer cabinet); `Desk_Set` holds `Monitor` (its centred 4:3 `Monitor_Screen` is where the site shows the resume)
+  and `Monitor_Right`, two `Speaker`s, an RGB gaming `PC_Tower` with a glass side, `Keyboard` (pink backlight),
+  `Mouse`, `Desk_Mat` and `Camera`; a dark `Rug` under the all-black gaming `Chair` (kept off the camera's path)
+* `Slat_Wall` — wooden slats on dark felt over the back wall, a warm LED line along the desk; three glowing `Sabers`
+  above the monitors; `Wood_Shelves` — wooden floating shelves with LED underglow (figurines, books, a plant); the
+  light under the lowest is `Lamp_Light`, aimed at the keyboard
 * `Sofa` — a charcoal corduroy bean-bag loveseat against the front wall, facing the desk
 * `Globe_Shelf` — a spherical bookshelf on the left wall (curved shelves and meridian fins in honey oak, filled with
   books and two small framed photos)
@@ -30,8 +30,8 @@ Both come from the same generator. The rest of this page describes `room.glb`; `
 * a `Cluster_Pendant` beside the globe shelf — five rattan balls on jute ropes
   with Edison bulbs and trailing pothos; the room's light (`Room_Fill`) glows inside it (no ceiling fan or centre
   pendant); a faint cool moon as `Sun`, the night garden outside
-* one frame — `Frame_family` (the family photograph, `public/photos/family.webp`; the site's caption is
-  `roomFrames.family` in `src/content/photos.ts`); no bench, plants, rug, bookshelf, postcards or sketches
+* no wall frames (the family photograph and its caption, `roomFrames.family` in `src/content/photos.ts`, are kept
+  for when one is hung again); no bench, plants, bookshelf, postcards or sketches
 
 | | |
 | --- | --- |
